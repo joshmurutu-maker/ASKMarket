@@ -13,5 +13,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Validate app and inline JavaScript
-        run: node scripts/check-app.mjs
+      - name: Validate app, inline JavaScript and API modules
+        run: |
+          node scripts/check-app.mjs
+          node --input-type=module --check < api/config.js
+          node --input-type=module --check < api/verification/access-token.js
