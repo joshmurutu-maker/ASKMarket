@@ -18,3 +18,5 @@ jobs:
           node scripts/check-app.mjs
           node --input-type=module --check < api/config.js
           node --input-type=module --check < api/verification/access-token.js
+          node --input-type=module --check < api/wallet/deposit.js
+          node --input-type=module --check < api/wallet/withdrawal.js

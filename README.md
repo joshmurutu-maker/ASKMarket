@@ -60,3 +60,10 @@ Do not accept real payments, enable payouts, or treat an account as verified bas
 ## Local development
 
 Use Vercel CLI to run the project locally so that the `/api` functions are available. Add the environment variables above to your local Vercel environment.
+
+## Wallet foundation (not activated)
+The application includes an authenticated wallet interface for Kenyan M-Pesa and selected crypto deposit/withdrawal requests. Wallet API routes validate the Supabase session and request data, then deliberately return HTTP 503 until approved payment/custody providers, signed webhooks, a server-side ledger and payout controls are implemented. No deposits are collected, crypto addresses are issued, balances are credited, or withdrawals are sent.
+
+The wallet schema is provided in `supabase/migrations/202611060003_wallet.sql`. Review and apply it to a staging Supabase project first; it enables row-level security and denies client-side balance/transaction writes. Do not apply directly to production without backup and review.
+
+Before enabling funds, complete Kenyan mobile-money merchant onboarding and sandbox testing; choose an appropriately regulated crypto custody/payment partner; implement signed webhooks, idempotency, reconciliation, verified KYC/KYB gates, MFA, withdrawal controls, audit trails and independent security review. Never place provider secrets or private keys in the browser or GitHub.

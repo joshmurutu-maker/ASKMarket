@@ -3,8 +3,8 @@
   "short_name": "ASKMarket",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f5f7f2",
-  "theme_color": "#10251d",
+  "background_color": "#f4f2ee",
+  "theme_color": "#0b1538",
   "description": "Wholesale distribution and retail marketplace.",
   "icons": []
 }
