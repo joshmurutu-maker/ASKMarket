@@ -1,10 +1,10 @@
 {
-  "name": "ASKMarket — Wholesale & Retail",
-  "short_name": "ASKMarket",
+  "name": "E-commerce — Wholesale & Retail",
+  "short_name": "E-commerce",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f2ee",
-  "theme_color": "#0b1538",
-  "description": "Wholesale distribution and retail marketplace.",
+  "background_color": "#f3f1ec",
+  "theme_color": "#171717",
+  "description": "Graphite and gold wholesale, distribution and retail marketplace.",
   "icons": []
 }
