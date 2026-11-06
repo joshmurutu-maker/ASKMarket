@@ -1,0 +1,20 @@
+name: ASKMarket quality checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate app, inline JavaScript and API modules
+        run: |
+          node scripts/check-app.mjs
+          node --input-type=module --check < api/config.js
+          node --input-type=module --check < api/verification/access-token.js
