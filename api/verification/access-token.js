@@ -1,2 +1,81 @@
 import crypto from "node:crypto";
-export default async function handler(req,res){if(req.method!=="POST"){res.setHeader("Allow","POST");return res.status(405).json({error:"Method not allowed"});}const supabaseUrl=process.env.SUPABASE_URL,anon=process.env.SUPABASE_ANON_KEY,appToken=process.env.SUMSUB_APP_TOKEN,secret=process.env.SUMSUB_SECRET_KEY;if(!supabaseUrl||!anon||!appToken||!secret)return res.status(503).json({error:"Account and verification services are not fully configured."});const auth=req.headers.authorization||"";if(!auth.startsWith("Bearer "))return res.status(401).json({error:"Sign in is required."});try{const userRes=await fetch(supabaseUrl+"/auth/v1/user",{headers:{apikey:anon,Authorization:auth}});if(!userRes.ok)return res.status(401).json({error:"Your session is invalid. Please sign in again."});const user=await userRes.json();const type=req.body?.verificationType;if(type!=="kyc"&&type!=="kyb")return res.status(400).json({error:"Choose KYC or KYB."});const role=user.user_metadata?.role||"buyer";if(type==="kyb"&&role==="buyer")return res.status(403).json({error:"Business verification is available for seller, distributor and retailer accounts."});const level=type==="kyc"?process.env.SUMSUB_KYC_LEVEL:process.env.SUMSUB_KYB_LEVEL;if(!level)return res.status(503).json({error:"The Sumsub "+type.toUpperCase()+" verification level is not configured."});const externalUserId=type==="kyb"?user.id+"-business":user.id;const body=JSON.stringify({userId:externalUserId,levelName:level,ttlInSecs:600,applicantIdentifiers:{email:user.email,...(req.body?.phone?{phone:req.body.phone}:{})}});const path="/resources/accessTokens/sdk",ts=Math.floor(Date.now()/1000).toString();const sig=crypto.createHmac("sha256",secret).update(ts+"POST"+path+body).digest("hex");const response=await fetch("https://api.sumsub.com"+path,{method:"POST",headers:{"Content-Type":"application/json","X-App-Token":appToken,"X-App-Access-Ts":ts,"X-App-Access-Sig":sig},body});const payload=await response.json();if(!response.ok)return res.status(502).json({error:"The verification provider could not issue a session. Check the Sumsub level configuration."});return res.status(200).json({token:payload.token,userId:payload.userId});}catch(e){return res.status(500).json({error:"Unable to start verification at this time."});}}
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const anon = process.env.SUPABASE_ANON_KEY;
+  const appToken = process.env.SUMSUB_APP_TOKEN;
+  const secret = process.env.SUMSUB_SECRET_KEY;
+
+  if (!supabaseUrl || !anon || !appToken || !secret) {
+    return res.status(503).json({ error: "Account and verification services are not fully configured." });
+  }
+
+  const auth = req.headers.authorization || "";
+  if (!auth.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Sign in is required." });
+  }
+
+  try {
+    const userRes = await fetch(new URL("/auth/v1/user", supabaseUrl), {
+      headers: { apikey: anon, Authorization: auth }
+    });
+    if (!userRes.ok) {
+      return res.status(401).json({ error: "Your session is invalid. Please sign in again." });
+    }
+
+    const user = await userRes.json();
+    const type = req.body?.verificationType;
+    if (type !== "kyc" && type !== "kyb") {
+      return res.status(400).json({ error: "Choose KYC or KYB." });
+    }
+
+    const role = user.app_metadata?.askmarket_role || "buyer";
+    if (type === "kyb" && !["seller", "distributor", "retailer"].includes(role)) {
+      return res.status(403).json({ error: "Business verification is available for seller, distributor and retailer accounts." });
+    }
+
+    const level = type === "kyc" ? process.env.SUMSUB_KYC_LEVEL : process.env.SUMSUB_KYB_LEVEL;
+    if (!level) {
+      return res.status(503).json({ error: "The Sumsub " + type.toUpperCase() + " verification level is not configured." });
+    }
+
+    const externalUserId = type === "kyb" ? user.id + "-business" : user.id;
+    const body = JSON.stringify({
+      userId: externalUserId,
+      levelName: level,
+      ttlInSecs: 600,
+      applicantIdentifiers: {
+        ...(user.email ? { email: user.email } : {}),
+        ...(req.body?.phone ? { phone: req.body.phone } : {})
+      }
+    });
+
+    const path = "/resources/accessTokens/sdk";
+    const ts = Math.floor(Date.now() / 1000).toString();
+    const sig = crypto.createHmac("sha256", secret).update(ts + "POST" + path + body).digest("hex");
+    const response = await fetch("https://api.sumsub.com" + path, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Token": appToken,
+        "X-App-Access-Ts": ts,
+        "X-App-Access-Sig": sig
+      },
+      body
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.token) {
+      return res.status(502).json({ error: "The verification provider could not issue a session. Check the Sumsub level configuration." });
+    }
+
+    return res.status(200).json({ token: payload.token, userId: payload.userId });
+  } catch {
+    return res.status(500).json({ error: "Unable to start verification at this time." });
+  }
+}
