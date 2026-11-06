@@ -1,0 +1,10 @@
+{
+  "name": "ASKMarket — Wholesale & Retail",
+  "short_name": "ASKMarket",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f7f2",
+  "theme_color": "#10251d",
+  "description": "Wholesale distribution and retail marketplace.",
+  "icons": []
+}
