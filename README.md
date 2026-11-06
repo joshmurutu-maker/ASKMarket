@@ -1,62 +1,20 @@
-# E-commerce
+# E-commerce wallet foundation
 
-A responsive wholesale, distribution and retail marketplace prototype with an account onboarding and verification integration scaffold.
+## Wallet interface
+The application includes a wallet screen with mobile-money (Kenyan M-Pesa) and crypto deposit request flows, mobile-money/crypto withdrawal forms, and an activity area. The browser never stores private keys or wallet balances.
 
-## Deploy
+## Important activation status
+The current implementation is a non-custodial UI/API scaffold only. Deposit and withdrawal API routes authenticate the Supabase session and validate request fields, then fail closed with HTTP 503. No payment is collected, no crypto address is issued, no withdrawal is sent, and no wallet balance is credited or reserved. Do not advertise the wallet as live.
 
-This is a static front end with Vercel serverless API routes. Connect the repository to Vercel with the project root set to `/`. No framework build command is required.
+## Database foundation
+Review and apply `supabase/migrations/0002_wallet.sql` in the linked Supabase project's SQL editor. It creates per-user wallet accounts and transaction records with row-level security. Users can read only their own rows; client-side writes are denied. Do not apply to production without a backup and review.
 
-## Included
+## Required integrations before enabling real funds
+1. Confirm the operating company, countries, currencies, licensing/partner model, custody model, limits and AML/fraud controls.
+2. Select an approved Kenyan mobile-money payment provider and complete merchant onboarding, callback registration and sandbox/production testing. M-Pesa Daraja credentials alone are not a complete production payment flow.
+3. Select a regulated crypto custody/payment provider and explicitly configure supported assets, networks, wallet generation, deposit confirmation thresholds, withdrawal signing and sanctions screening. Never expose custody API secrets or private keys to the browser.
+4. Add signed provider webhooks, replay protection, idempotency, reconciliation and a server-only ledger posting service. Credit deposits only after verified provider settlement/on-chain confirmation. Reserve balances atomically before payout and release only on confirmed failure.
+5. Enforce verified KYC/KYB status, beneficial-owner checks where relevant, MFA/step-up authentication, withdrawal allowlists, velocity/amount limits, audit logs, support/dispute process and independent security review.
+6. Test in sandbox with test accounts and controlled values before any production activation.
 
-- Home, Discover, Cart, Dashboard and Profile views
-- Buyer, Seller, Distributor and Retailer account choices
-- Supabase Auth sign-up and sign-in flow (requires project configuration)
-- Account metadata for name, role, business name, phone and address
-- Sumsub WebSDK launch for individual KYC and business KYB
-- Server-side HMAC signing for Sumsub access-token requests
-- Short-lived verification tokens; Sumsub secret stays server-side
-- Basic PWA manifest and service worker
-
-## Required Vercel environment variables
-
-Add these in Vercel Project → Settings → Environment Variables, for Production, Preview and Development as appropriate:
-
-| Variable | Purpose |
-| --- | --- |
-| `SUPABASE_URL` | Your Supabase project URL |
-| `SUPABASE_ANON_KEY` | Supabase publishable/anon key |
-| `SUMSUB_APP_TOKEN` | Sumsub app token for the selected environment |
-| `SUMSUB_SECRET_KEY` | Sumsub API secret (keep private; never expose in browser) |
-| `SUMSUB_KYC_LEVEL` | Exact Sumsub individual verification level name |
-| `SUMSUB_KYB_LEVEL` | Exact Sumsub company verification level name |
-
-Use Sumsub Sandbox credentials and Sandbox verification levels for testing first. Create/configure one individual KYC level and one company KYB level in Sumsub. The level names are case-sensitive. Switch to production credentials only after business onboarding, privacy/compliance review, webhook configuration and end-to-end testing.
-
-## Account onboarding
-
-Users create accounts with email and password through Supabase Auth. Enable email confirmation in Supabase Auth settings. The app stores the signed-in session in the browser session storage for the current tab/session. The profile fields and account role are stored as Supabase user metadata; for a production marketplace, add a database-backed profile table with row-level security and server-side role policies.
-
-## KYC/KYB
-
-After sign-in, users can launch the Sumsub-hosted WebSDK:
-- Buyer: individual KYC.
-- Seller, Distributor and Retailer: individual KYC and business KYB, as applicable.
-- KYB is configured as a company verification level in Sumsub; configure beneficial-owner/representative checks in the provider workflow.
-
-The API route `POST /api/verification/access-token` validates the Supabase access token before issuing a short-lived Sumsub SDK token. Sumsub's app token and secret are used only server-side.
-
-## Required production work before accepting real users or payments
-
-This repository is not yet a complete production commerce platform. Before live onboarding, add and test:
-- A database-backed profile and verification-status table with row-level security.
-- A signed Sumsub webhook endpoint that validates provider signatures and records final `applicantReviewed` outcomes idempotently. The current UI can launch verification but does not yet synchronize final approval/rejection status.
-- Email verification, password recovery, MFA, session refresh and abuse/rate limiting.
-- Admin review and audit trails, privacy/retention/deletion workflows, and documented lawful basis/consent for processing.
-- Seller KYB and beneficial-owner checks configured for the applicable jurisdictions.
-- Order, inventory, payments, refunds, disputes and payout backends with access controls and reconciliation.
-
-Do not accept real payments, enable payouts, or treat an account as verified based only on opening or completing the SDK screen. Verification must be confirmed from a trusted provider webhook/status result. Do not collect or store identity-document images, biometric data, passwords, bank credentials or private keys in the front end.
-
-## Local development
-
-Use Vercel CLI to run the project locally so that the `/api` functions are available. Add the environment variables above to your local Vercel environment.
+The wallet must not be used to hold customer funds or offer crypto custody/transfers until legal and provider arrangements are approved. The current API deliberately does not execute transactions.
