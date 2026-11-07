@@ -63,7 +63,7 @@ Use Vercel CLI to run the project locally so that the `/api` functions are avail
 
 ## Supabase database setup
 
-The repository now includes a Supabase CLI project configuration at `supabase/config.toml` and a core marketplace migration at `supabase/migrations/202611070001_marketplace_core.sql`. Apply the core migration first, followed by `supabase/migrations/202611060003_wallet.sql`, to create profiles, seller listings, verification records and the restricted wallet foundation. Review and apply both migrations to a staging Supabase project before production. The SQL files are versioned in GitHub; they do not create a hosted Supabase project or run automatically from a Vercel frontend deployment.
+The repository now includes a Supabase CLI project configuration at `supabase/config.toml` and a core marketplace migration at `supabase/migrations/202611060002_marketplace_core.sql`. Apply the core migration first, followed by `supabase/migrations/202611060003_wallet.sql`, to create profiles, seller listings, verification records and the restricted wallet foundation. Review and apply both migrations to a staging Supabase project before production. The SQL files are versioned in GitHub; they do not create a hosted Supabase project or run automatically from a Vercel frontend deployment.
 
 For the current browser/API integration, set `SUPABASE_URL` and `SUPABASE_ANON_KEY` in Vercel. Use the Supabase Project URL and publishable/anon key from the project's Connect/API settings. Never use a service-role key in browser code or commit credentials to GitHub.
 
