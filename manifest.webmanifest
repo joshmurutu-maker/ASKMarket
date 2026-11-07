@@ -2,9 +2,17 @@
   "name": "E-commerce — Wholesale & Retail",
   "short_name": "E-commerce",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f3f1ec",
   "theme_color": "#171717",
   "description": "Graphite and gold wholesale, distribution and retail marketplace.",
-  "icons": []
+  "icons": [
+    {
+      "src": "/icons/ecommerce-app.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
 }
