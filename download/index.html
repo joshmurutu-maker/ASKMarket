@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#171717"><meta name="description" content="Install the E-commerce marketplace app on your device.">
+<link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icons/ecommerce-app.svg" type="image/svg+xml">
+<title>Download E-commerce</title>
+<style>
+:root{color-scheme:light;--ink:#242321;--muted:#716c62;--gold:#d9b65f;--line:#e3dac8}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(150deg,#f5f1e8,#e9e5dc);color:var(--ink);font:16px/1.55 Inter,system-ui,-apple-system,Segoe UI,sans-serif;display:grid;place-items:center;padding:24px}
+main{width:min(100%,620px);background:#fffdf8;border:1px solid var(--line);border-radius:26px;padding:clamp(24px,6vw,46px);box-shadow:0 22px 60px #28231a16}
+.brand{display:flex;align-items:center;gap:12px;font-size:25px;font-weight:900;letter-spacing:-1px}.brand img{width:54px;height:54px}
+.eyebrow{margin-top:28px;color:#8b6b2b;font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase}
+h1{font-size:clamp(32px,7vw,48px);line-height:1.05;letter-spacing:-1.8px;margin:9px 0 14px}
+p{color:var(--muted)}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0}
+button,.link{border:0;border-radius:12px;padding:13px 18px;font:inherit;font-weight:800;text-decoration:none;cursor:pointer}
+.primary{background:linear-gradient(135deg,#ecd18b,#c39b45);color:#211e19}.secondary{background:#242321;color:#f8f5ed}
+.steps{padding:18px 20px;background:#f5f1e8;border-radius:16px;margin-top:20px}.steps h2{font-size:16px;margin:0 0 8px}.steps ol{padding-left:20px;margin:0;color:#5f5a50}.steps li{padding:4px 0}
+.note{font-size:12px;margin-top:22px}.status{min-height:22px;color:#765b27;font-size:13px}
+</style></head>
+<body><main>
+<div class="brand"><img src="/icons/ecommerce-app.svg" alt="">E-commerce <span aria-hidden="true" style="color:#c39b45">✦</span></div>
+<div class="eyebrow">Your marketplace, ready to go</div>
+<h1>Get the E-commerce app.</h1>
+<p>Install E-commerce on your phone or computer for a convenient, app-like experience. Your installed app opens directly to the marketplace.</p>
+<div class="actions"><button id="installButton" class="primary" hidden>Install E-commerce</button><a class="link secondary" href="/">Open website</a></div>
+<div id="status" class="status" role="status" aria-live="polite"></div>
+<section class="steps"><h2>Install from your browser</h2><ol><li><b>Android / Chrome:</b> open the browser menu and choose “Install app” or “Add to Home screen”.</li><li><b>iPhone / iPad:</b> open this page in Safari, tap Share, then “Add to Home Screen”.</li><li><b>Computer:</b> use the install icon in the browser address bar, when available.</li></ol></section>
+<p class="note">This is an installable web app (PWA), not a separate APK download. Installation availability depends on your browser and device.</p>
+</main>
+<script>
+let installPrompt=null;const button=document.getElementById('installButton');const status=document.getElementById('status');
+window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;button.hidden=false;status.textContent='Your device supports direct installation.'});
+button.addEventListener('click',async()=>{if(!installPrompt){status.textContent='Use your browser menu to install or add this app to your home screen.';return}installPrompt.prompt();const choice=await installPrompt.userChoice;status.textContent=choice.outcome==='accepted'?'E-commerce installation started.':'Installation was dismissed. You can install later from your browser menu.';installPrompt=null;button.hidden=true});
+window.addEventListener('appinstalled',()=>{status.textContent='E-commerce was installed successfully.';button.hidden=true});
+if(window.matchMedia('(display-mode: standalone)').matches)status.textContent='E-commerce is running as an installed app.';
+</script></body></html>
