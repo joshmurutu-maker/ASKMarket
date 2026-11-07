@@ -1,4 +1,4 @@
-# ASKMarket
+# E-commerce
 
 A responsive wholesale, distribution and retail marketplace prototype with an account onboarding and verification integration scaffold.
 
