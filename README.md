@@ -61,6 +61,12 @@ Do not accept real payments, enable payouts, or treat an account as verified bas
 
 Use Vercel CLI to run the project locally so that the `/api` functions are available. Add the environment variables above to your local Vercel environment.
 
+## Supabase database setup
+
+The repository now includes a Supabase CLI project configuration at `supabase/config.toml` and a core marketplace migration at `supabase/migrations/202611070001_marketplace_core.sql`. Apply the core migration first, followed by `supabase/migrations/202611060003_wallet.sql`, to create profiles, seller listings, verification records and the restricted wallet foundation. Review and apply both migrations to a staging Supabase project before production. The SQL files are versioned in GitHub; they do not create a hosted Supabase project or run automatically from a Vercel frontend deployment.
+
+For the current browser/API integration, set `SUPABASE_URL` and `SUPABASE_ANON_KEY` in Vercel. Use the Supabase Project URL and publishable/anon key from the project's Connect/API settings. Never use a service-role key in browser code or commit credentials to GitHub.
+
 ## Wallet foundation (not activated)
 The application includes an authenticated wallet interface for Kenyan M-Pesa and selected crypto deposit/withdrawal requests. Wallet API routes validate the Supabase session and request data, then deliberately return HTTP 503 until approved payment/custody providers, signed webhooks, a server-side ledger and payout controls are implemented. No deposits are collected, crypto addresses are issued, balances are credited, or withdrawals are sent.
 
