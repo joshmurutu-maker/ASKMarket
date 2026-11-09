@@ -27,7 +27,7 @@ This repository contains draft public-facing policy copy at `/legal/`. It is int
 - Seller must confirm that the generated illustration accurately represents the real item. AI output is not proof of authenticity, condition or provenance.
 - Configure `OPENAI_API_KEY` only in Vercel server-side environment variables. Never expose it to the browser or commit it.
 - Apply migration `202611090005_ai_product_images.sql` to staging first. The storage bucket is public-read for listing images; uploads are restricted to authenticated seller/distributor/retailer profiles and their own folder.
-- Add durable rate limiting, per-account quotas, cost monitoring and abuse review before public launch. AI image generation incurs provider charges.
+- A database-backed quota currently limits each seller to five generations in a rolling 24-hour period. Add monitoring, abuse review and an operator-adjustable cost ceiling before public launch. AI image generation incurs provider charges.
 - Do not upload private, personal, copyrighted or trademarked reference material without rights.
 
 ## Required Vercel environment
