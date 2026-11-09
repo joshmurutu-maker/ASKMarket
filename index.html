@@ -177,7 +177,25 @@ body{background:linear-gradient(180deg,#f3f1ec 0%,#ebe7df 100%);color:#262522}
 </section>
 <section id="wallet" class="hidden">
 <div class="section-head"><div><div class="eyebrow">Wallet & payments</div><h2>Your E-commerce wallet</h2><p class="muted">Mobile-money and cryptocurrency deposits, balances and withdrawals.</p></div></div>
-<div class="wallet-balance"><div><span class="wallet-kicker">Available balance</span><div class="wallet-amount">KES —</div><span class="wallet-kicker">Live balance appears after secure wallet services are connected</span></div><div class="wallet-mark">✦</div></div>
+<div class="wallet-balance">
+<div class="panel" id="nonCustodialWallet" style="margin:18px 0;border:1px solid #b99752;background:linear-gradient(135deg,#fffdf8,#f4eee0)">
+  <div class="eyebrow">Non-custodial crypto wallet</div>
+  <h3>Connect your own Ethereum wallet</h3>
+  <p class="muted">You keep control of your keys. ASKMarket never asks for or stores your recovery phrase or private key. This first release only reads your public address and Sepolia ETH test balance.</p>
+  <div class="formgrid">
+    <div class="field"><b>Wallet</b><div id="ncwAddress">Not connected</div></div>
+    <div class="field"><b>Network</b><div id="ncwNetwork">Not connected</div></div>
+    <div class="field"><b>Sepolia ETH balance</b><div id="ncwBalance">—</div></div>
+  </div>
+  <div class="wallet-actions" style="margin-top:14px">
+    <button class="btn dark" id="ncwConnect" type="button">Connect wallet</button>
+    <button class="btn" id="ncwSwitch" type="button" disabled>Switch to Sepolia</button>
+    <button class="btn ghost" id="ncwForget" type="button" disabled>Clear display</button>
+  </div>
+  <p id="ncwStatus" class="small" role="status" aria-live="polite">Connect using a wallet app or browser extension that supports Ethereum.</p>
+  <p class="small">Safety: no token approvals, signatures, deposits, withdrawals or transfers are requested. Use test ETH only on Sepolia. Never send real funds to testnet addresses.</p>
+</div>
+<div><span class="wallet-kicker">Available balance</span><div class="wallet-amount">KES —</div><span class="wallet-kicker">Live balance appears after secure wallet services are connected</span></div><div class="wallet-mark">✦</div></div>
 <div class="wallet-actions"><button class="btn" type="button" onclick="walletTab('deposit')">＋ Deposit</button><button class="btn dark" type="button" onclick="walletTab('withdraw')">↗ Withdraw</button><button class="btn ghost" type="button" onclick="walletTab('history')">Transaction history</button></div>
 <div class="wallet-tabs"><button class="wallet-tab active" id="wtab-deposit" onclick="walletTab('deposit')">Deposit</button><button class="wallet-tab" id="wtab-withdraw" onclick="walletTab('withdraw')">Withdraw</button><button class="wallet-tab" id="wtab-history" onclick="walletTab('history')">Activity</button></div>
 <div id="wallet-deposit" class="panel wallet-panel"><h3>Choose deposit method</h3>
@@ -219,4 +237,5 @@ async function walletRequest(path,payload,target){const out=document.getElementB
 document.getElementById('mobileDepositForm').addEventListener('submit',e=>{e.preventDefault();walletRequest('/api/wallet/deposit',{method:'mobile_money',amount:Number(document.getElementById('mobileAmount').value),currency:'KES',phone:document.getElementById('mobilePhone').value.trim()},'depositMessage')});
 document.getElementById('cryptoDepositForm').addEventListener('submit',e=>{e.preventDefault();walletRequest('/api/wallet/deposit',{method:'crypto',asset:document.getElementById('cryptoAsset').value,network:document.getElementById('cryptoNetwork').value},'depositMessage')});
 document.getElementById('withdrawForm').addEventListener('submit',e=>{e.preventDefault();const method=document.getElementById('withdrawMethod').value;const payload={method,amount:Number(document.getElementById('withdrawAmount').value),confirmed:document.getElementById('withdrawConfirm').checked,...(method==='mobile'?{phone:document.getElementById('withdrawPhone').value.trim()}:{asset:document.getElementById('withdrawAsset').value,network:document.getElementById('withdrawNetwork').value,address:document.getElementById('withdrawAddress').value.trim()})};walletRequest('/api/wallet/withdrawal',payload,'withdrawMessage')});
-</script></body></html>
+</script><script src="/wallet-connect.js" defer></script>
+</body></html>
