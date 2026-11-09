@@ -6,9 +6,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const shop = (process.env.SHOPIFY_STORE_DOMAIN || "8d4ygm-d0.myshopify.com")
-    .trim().replace(/^https?:\\/\\//i, "").replace(/\\/$/, "");
-  if (!/^[a-z0-9][a-z0-9-]*\\.myshopify\\.com$/i.test(shop)) {
+  const rawShop = process.env.SHOPIFY_STORE_DOMAIN || "8d4ygm-d0.myshopify.com";
+  const shop = rawShop.trim().replace("https://", "").replace("http://", "").split("/")[0].toLowerCase();
+  if (!shop.endsWith(".myshopify.com") || shop.length > 253 || shop.includes("..")) {
     return res.status(503).json({ error: "Shopify store domain is not configured correctly." });
   }
 
