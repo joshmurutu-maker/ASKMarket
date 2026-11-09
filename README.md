@@ -93,3 +93,10 @@ Shopify product discovery and the Shopify-hosted customer-account link are propo
 - `ASKMarket()` and selector `0xa397fc12` remain provisional metadata. Independently verify the selector and contract behavior, complete review, and deploy to Sepolia before describing any contract as live. Mainnet and production transfers remain disabled.
 - A Vercel deployment does not apply Supabase migrations or configure environment variables. Apply migrations to staging first and configure secrets server-side in Vercel.
 
+
+
+## Buyer and seller inbox
+
+The buyer/seller inbox is available at \`/inbox.html\` and from the marketplace navigation. It uses the signed-in Supabase session, row-level security, product-linked buyer enquiries, participant-only message access and Supabase Realtime (with periodic refresh fallback). The public member directory view exposes only display name, business name and role; it does not expose email, phone or address.
+
+Apply \`supabase/migrations/202611090002_buyer_seller_inbox.sql\` to the same staging Supabase project after the marketplace core migration (\`202611060002_marketplace_core.sql\`). Test with two separate verified accounts: a buyer starts a conversation from a published product, and the seller replies from their Inbox. Apply to production only after staging tests and a database backup. Vercel deployment alone does not apply Supabase migrations.
