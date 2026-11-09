@@ -93,6 +93,7 @@
       price: Number(row.price),
       qty: "Available: " + Number(row.quantity || 0),
       seller: "Marketplace seller",
+      status: row.status,
       emoji: "📦",
       image: row.image_url || "",
       description: row.description || "",
@@ -137,7 +138,7 @@
     await loadRemoteListings(false);
     const q = (document.getElementById("search")?.value || "").toLowerCase();
     const category = document.getElementById("category")?.value || "";
-    const list = [...products, ...custom, ...remoteListings].filter(function (p) {
+    const list = [...products, ...custom.map(function (p) { return Object.assign({}, p, { localOnly: true }); }), ...remoteListings].filter(function (p) {
       return (!category || p.cat === category) && (p.name || "").toLowerCase().includes(q);
     });
     target.innerHTML = list.map(productCard).join("") || '<div class="empty">No matching products yet.</div>';
@@ -149,6 +150,7 @@
     cart.push(product);
     localStorage.setItem("ask-cart", JSON.stringify(cart));
     document.getElementById("cartCount").textContent = cart.length;
+    if (product.status === "pending_review") { alert("This listing is awaiting marketplace review and cannot be purchased yet."); return; }
     alert("Added to your demo cart. Checkout remains disabled until payment and order services are approved.");
   };
 
@@ -190,9 +192,9 @@
       previewWrap.classList.add("hidden");
       preview.removeAttribute("src");
       input.value = "";
-      status.textContent = "Published successfully. Your listing and product photo are now stored in the shared marketplace.";
+      status.textContent = "Submitted successfully. Your listing and product photo are stored in your account and will appear publicly after marketplace review.";
       if (typeof window.renderProducts === "function") await window.renderProducts();
-      alert("Your product listing is now live in the shared marketplace.");
+      alert("Your listing has been submitted for marketplace review. You can see it in Discover while signed in.");
     } catch (error) {
       status.textContent = error.message;
     } finally {
