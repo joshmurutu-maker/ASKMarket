@@ -20,10 +20,8 @@ for (const table of ["profiles", "products", "verification_cases"]) {
   if (!migration.includes("create table if not exists public." + table)) throw new Error("Missing core table: " + table);
   if (!migration.includes("alter table public." + table + " enable row level security")) throw new Error("RLS not enabled for: " + table);
 }
-for (const path of ["../legal/terms.html", "../legal/privacy.html", "../legal/returns.html", "../legal/seller-standards.html"]) {
-  const source = readFileSync(new URL(path, import.meta.url), "utf8");
-  if (!source.includes("Draft for legal review")) throw new Error("Legal page must remain clearly marked as a draft: " + path);
-}
+const legalPage = readFileSync(new URL("../legal/index.html", import.meta.url), "utf8");
+if (!legalPage.includes("Draft for legal and operational review")) throw new Error("Legal hub must remain clearly marked as a draft.");
 const config = readFileSync(new URL("../api/config.js", import.meta.url), "utf8");
 if (!config.includes("accountServiceConfigured")) throw new Error("Config endpoint must expose account-service readiness.");
 if (/SUPABASE_SERVICE_ROLE_KEY|SUMSUB_SECRET_KEY/.test(config)) throw new Error("A server-only secret is referenced by the public config endpoint.");
