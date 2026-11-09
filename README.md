@@ -28,7 +28,7 @@ Add these in Vercel Project → Settings → Environment Variables, for Producti
 | `SUMSUB_APP_TOKEN` | Sumsub app token for the selected environment |
 | `SUMSUB_SECRET_KEY` | Sumsub API secret (keep private; never expose in browser) |
 | `SUMSUB_KYC_LEVEL` | Exact Sumsub individual verification level name |
-| `SUMSUB_KYB_LEVEL` | Exact Sumsub company verification level name |
+| `SUMSUB_KYB_LEVEL` | Exact Sumsub company verification level name |\n| `OPENAI_API_KEY` | Server-only key for AI product-image generation; usage incurs provider charges |
 
 Use Sumsub Sandbox credentials and Sandbox verification levels for testing first. Create/configure one individual KYC level and one company KYB level in Sumsub. The level names are case-sensitive. Switch to production credentials only after business onboarding, privacy/compliance review, webhook configuration and end-to-end testing.
 
@@ -73,3 +73,5 @@ The application includes an authenticated wallet interface for Kenyan M-Pesa and
 The wallet schema is provided in `supabase/migrations/202611060003_wallet.sql`. Review and apply it to a staging Supabase project first; it enables row-level security and denies client-side balance/transaction writes. Do not apply directly to production without backup and review.
 
 Before enabling funds, complete Kenyan mobile-money merchant onboarding and sandbox testing; choose an appropriately regulated crypto custody/payment partner; implement signed webhooks, idempotency, reconciliation, verified KYC/KYB gates, MFA, withdrawal controls, audit trails and independent security review. Never place provider secrets or private keys in the browser or GitHub.
+
+\n## AI product images\n\nSeller listings generate a product illustration through the server-side OpenAI Images API and save it to the Supabase `product-images` bucket. Product cards label AI-generated artwork and use a restrained cyan/violet neon glow. Configure `OPENAI_API_KEY` in Vercel only; do not add it to browser code or Git. Apply `supabase/migrations/202611090005_ai_product_images.sql` to staging before testing. The migration adds `products.image_url`, creates a public-read image bucket, and restricts uploads to each authenticated seller's folder. AI imagery is illustrative; sellers must ensure it accurately represents the real item. Add durable rate limits, per-user quotas and cost alerts before public launch.\n\n## Legal and trust information\n\nA draft policy hub is available at `/legal/`. It is not a legal certification. Replace all bracketed business-identity/contact fields and obtain Kenyan legal review before production publication. See `docs/legal-and-trust-readiness.md` for the launch gate, including Data Protection Act/ODPC, consumer-protection, seller, privacy, security and payment requirements. Keep real-money payments and payouts disabled until the required providers, controls and legal approvals are complete.\n
