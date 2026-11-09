@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import vm from "node:vm";
 
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
@@ -8,7 +9,7 @@ for (const id of requiredSections) {
 }
 if (html.includes("\\nasync function")) throw new Error("Escaped newline found in inline app JavaScript.");
 if (/SUMSUB_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY|STRIPE_SECRET_KEY|PRIVATE_KEY/.test(html)) throw new Error("A server-only secret name appears in public HTML.");
-const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/gi)].map(match => match[1]);
+const scripts = [...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/gi)].map(match => match[1]);
 if (scripts.length === 0) throw new Error("No inline app script found.");
 for (const source of scripts) new vm.Script(source, { filename: "index.inline.js" });
 for (const path of ["../api/config.js", "../api/verification/access-token.js"]) {
@@ -18,7 +19,13 @@ for (const path of ["../api/config.js", "../api/verification/access-token.js"]) 
 const imageTools = readFileSync(new URL("../seller-image-tools.js", import.meta.url), "utf8");
 new vm.Script(imageTools, { filename: "seller-image-tools.js" });
 const imageApi = readFileSync(new URL("../api/images/customize-background.js", import.meta.url), "utf8");
-new vm.Script(imageApi, { filename: "api/images/customize-background.js" });
+const imageApiCheck = spawnSync(process.execPath, ["--input-type=module", "--check"], {
+  input: imageApi,
+  encoding: "utf8"
+});
+if (imageApiCheck.status !== 0) {
+  throw new Error("Invalid AI image API module syntax: " + (imageApiCheck.stderr || imageApiCheck.stdout));
+}
 if (!imageApi.includes('auth.startsWith("Bearer ")')) throw new Error("AI image endpoint must require an authenticated session.");
 if (!imageApi.includes("OPENAI_API_KEY")) throw new Error("AI image API key must remain server-side.");
 
