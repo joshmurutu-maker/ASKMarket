@@ -132,7 +132,7 @@
       : '<div class="product-art">' + safe(product.emoji || "📦") + "</div>";
     const footer = product.status === "pending_review"
       ? '<span class="tag">Review pending</span>'
-      : '<button class="btn dark" onclick="addCart(\\'' + safe(product.id) + '\\')">Add to cart</button>';
+      : '<button class="btn dark" type="button" data-add-cart="' + safe(product.id) + '">Add to cart</button>';
     const label = product.status === "pending_review" ? "Submitted for review" : product.localOnly ? "Saved on this device" : product.status === "published" ? "Approved listing" : "Sample listing";
     return '<article class="card">' + photo + '<div class="card-body"><span class="tag">' + safe(product.cat) + '</span><h3>' + safe(product.name) + '</h3><div class="price">' + money(product.price) + '</div><div class="small">' + safe(product.qty || "MOQ not set") + " · " + safe(product.seller || "E-commerce seller") + '</div><div class="card-foot"><span class="small">' + label + '</span>' + footer + '</div></div></article>';
   }
@@ -150,6 +150,11 @@
     });
     target.innerHTML = list.map(productCard).join("") || '<div class="empty">No matching products yet.</div>';
   };
+
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest("button[data-add-cart]");
+    if (button) window.addCart(button.dataset.addCart);
+  });
 
   window.addCart = function (id) {
     const product = [...products, ...custom, ...remoteListings].find(function (item) { return String(item.id) === String(id); });
