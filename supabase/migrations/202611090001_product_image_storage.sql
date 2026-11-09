@@ -1,11 +1,84 @@
--- Durable seller product photos and public marketplace image delivery.
--- Apply this migration to the linked Supabase project before deploying the API changes.
+-- Durable seller listings and product image storage.
+-- Seller submissions are private to their owner until approved by a trusted moderation process.
 
-alter table public.products
-  add column if not exists image_url text;
+create table if not exists public.seller_listings (
+  id uuid primary key default gen_random_uuid(),
+  seller_id uuid not null references auth.users(id) on delete cascade,
+  name text not null check (char_length(name) between 2 and 160),
+  description text not null default '',
+  category text not null,
+  price numeric(18,2) not null check (price > 0),
+  currency text not null default 'KES' check (currency in ('KES','USD')),
+  quantity integer not null default 0 check (quantity >= 0),
+  image_url text,
+  status text not null default 'pending_review'
+    check (status in ('pending_review','published','rejected','archived')),
+  moderation_note text,
+  reviewed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
 
-create index if not exists products_published_created_idx
-  on public.products(status, created_at desc);
+create index if not exists seller_listings_public_idx
+  on public.seller_listings(status, created_at desc);
+create index if not exists seller_listings_owner_idx
+  on public.seller_listings(seller_id, created_at desc);
+
+create or replace function public.guard_seller_listing_moderation()
+returns trigger language plpgsql
+as $$
+begin
+  if tg_op = 'INSERT' then
+    new.status := 'pending_review';
+    new.moderation_note := null;
+    new.reviewed_at := null;
+  else
+    new.status := old.status;
+    new.moderation_note := old.moderation_note;
+    new.reviewed_at := old.reviewed_at;
+  end if;
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+drop trigger if exists seller_listings_moderation_guard on public.seller_listings;
+create trigger seller_listings_moderation_guard
+before insert or update on public.seller_listings
+for each row execute function public.guard_seller_listing_moderation();
+
+alter table public.seller_listings enable row level security;
+drop policy if exists "Public can view approved seller listings" on public.seller_listings;
+create policy "Public can view approved seller listings"
+  on public.seller_listings for select to anon, authenticated
+  using (status = 'published');
+drop policy if exists "Sellers can view their own listings" on public.seller_listings;
+create policy "Sellers can view their own listings"
+  on public.seller_listings for select to authenticated
+  using (seller_id = auth.uid());
+drop policy if exists "Seller roles can create their own listings" on public.seller_listings;
+create policy "Seller roles can create their own listings"
+  on public.seller_listings for insert to authenticated
+  with check (
+    seller_id = auth.uid()
+    and exists (
+      select 1 from public.profiles p
+      where p.user_id = auth.uid()
+        and p.role in ('seller','distributor','retailer')
+    )
+  );
+drop policy if exists "Sellers can update their own listing details" on public.seller_listings;
+create policy "Sellers can update their own listing details"
+  on public.seller_listings for update to authenticated
+  using (seller_id = auth.uid())
+  with check (seller_id = auth.uid());
+drop policy if exists "Sellers can delete their own listings" on public.seller_listings;
+create policy "Sellers can delete their own listings"
+  on public.seller_listings for delete to authenticated
+  using (seller_id = auth.uid());
+
+grant select on public.seller_listings to anon, authenticated;
+grant insert, update, delete on public.seller_listings to authenticated;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
