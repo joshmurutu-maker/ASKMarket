@@ -41,4 +41,9 @@ for (const path of ["../api/wallet/deposit.js", "../api/wallet/withdrawal.js"]) 
   if (source.includes("\\n")) throw new Error("Escaped newline found in wallet API module: " + path);
 }
 console.log("ASKMarket static checks passed.");
-\nfor (const path of ["../api/products/index.js", "../api/products/ai-image.js"]) {\n  const source = readFileSync(new URL(path, import.meta.url), "utf8");\n  if (source.includes("\\\\n")) throw new Error("Escaped newline found in product API module: " + path);\n}\nconst imageMigration = readFileSync(new URL("../supabase/migrations/202611090005_ai_product_images.sql", import.meta.url), "utf8");\nfor (const expected of ["image_url", "product-images", "consume_product_image_quota"]) if (!imageMigration.includes(expected)) throw new Error("Missing AI image migration feature: " + expected);\n
+for (const path of ["../api/products/index.js", "../api/products/ai-image.js"]) {
+  const source = readFileSync(new URL(path, import.meta.url), "utf8");
+  if (source.includes("\\n")) throw new Error("Escaped newline found in product API module: " + path);
+}
+const imageMigration = readFileSync(new URL("../supabase/migrations/202611090005_ai_product_images.sql", import.meta.url), "utf8");
+for (const expected of ["image_url", "product-images", "consume_product_image_quota"]) if (!imageMigration.includes(expected)) throw new Error("Missing AI image migration feature: " + expected);
