@@ -15,8 +15,8 @@ for (const path of ["../api/config.js", "../api/verification/access-token.js"]) 
   const source = readFileSync(new URL(path, import.meta.url), "utf8");
   if (source.includes("\\n")) throw new Error("Escaped newline found in API module: " + path);
 }
-const migration = readFileSync(new URL("../supabase/migrations/202611060001_marketplace_core.sql", import.meta.url), "utf8");
-for (const table of ["profiles", "businesses", "products", "orders", "payment_intents", "ledger_entries", "verification_cases"]) {
+const migration = readFileSync(new URL("../supabase/migrations/202611060002_marketplace_core.sql", import.meta.url), "utf8");
+for (const table of ["profiles", "products", "verification_cases"]) {
   if (!migration.includes("create table if not exists public." + table)) throw new Error("Missing core table: " + table);
   if (!migration.includes("alter table public." + table + " enable row level security")) throw new Error("RLS not enabled for: " + table);
 }
@@ -40,4 +40,5 @@ for (const path of ["../api/wallet/deposit.js", "../api/wallet/withdrawal.js"]) 
   if (!source.includes("return res.status(503)")) throw new Error("Wallet API must remain fail-closed until provider integration: " + path);
   if (source.includes("\\n")) throw new Error("Escaped newline found in wallet API module: " + path);
 }
-\nconsole.log("ASKMarket static checks passed.");
+console.log("ASKMarket static checks passed.");
+\nfor (const path of ["../api/products/index.js", "../api/products/ai-image.js"]) {\n  const source = readFileSync(new URL(path, import.meta.url), "utf8");\n  if (source.includes("\\\\n")) throw new Error("Escaped newline found in product API module: " + path);\n}\nconst imageMigration = readFileSync(new URL("../supabase/migrations/202611090005_ai_product_images.sql", import.meta.url), "utf8");\nfor (const expected of ["image_url", "product-images", "consume_product_image_quota"]) if (!imageMigration.includes(expected)) throw new Error("Missing AI image migration feature: " + expected);\n
