@@ -40,4 +40,5 @@ for (const path of ["../api/wallet/deposit.js", "../api/wallet/withdrawal.js"]) 
   if (!source.includes("return res.status(503)")) throw new Error("Wallet API must remain fail-closed until provider integration: " + path);
   if (source.includes("\\n")) throw new Error("Escaped newline found in wallet API module: " + path);
 }
-\nconsole.log("ASKMarket static checks passed.");
+
+console.log("ASKMarket static checks passed.");
