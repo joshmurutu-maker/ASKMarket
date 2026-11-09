@@ -1,22 +1,52 @@
 name: ASKMarket quality checks
+
 on:
   pull_request:
+    branches: [main]
   push:
     branches: [main]
+
+# Cancel superseded checks for the same branch/PR to reduce queue time.
+concurrency:
+  group: askmarket-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
+
 jobs:
   static-checks:
+    name: Static validation
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Validate app, inline JavaScript and API modules
+          cache: false
+
+      - name: Validate app structure and security invariants
+        run: node scripts/check-app.mjs
+
+      - name: Validate every server API module
+        shell: bash
         run: |
-          node scripts/check-app.mjs
-          node --input-type=module --check < api/config.js
-          node --input-type=module --check < api/verification/access-token.js
-          node --input-type=module --check < api/wallet/deposit.js
-          node --input-type=module --check < api/wallet/withdrawal.js
+          set -euo pipefail
+          for file in \
+            api/config.js \
+            api/verification/access-token.js \
+            api/images/customize-background.js \
+            api/products.js \
+            api/wallet/deposit.js \
+            api/wallet/withdrawal.js
+          do
+            echo "Checking ${file}"
+            node --input-type=module --check < "${file}"
+          done
+
+      - name: Check patch whitespace
+        run: git diff --check
