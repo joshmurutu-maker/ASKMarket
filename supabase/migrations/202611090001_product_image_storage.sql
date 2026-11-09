@@ -79,7 +79,7 @@ create policy "Seller roles can create their own listings"
     seller_id = auth.uid()
     and exists (
       select 1 from public.profiles p
-      where p.user_id = auth.uid()
+      where p.id = auth.uid()
         and p.role in ('seller','distributor','retailer')
     )
   );
