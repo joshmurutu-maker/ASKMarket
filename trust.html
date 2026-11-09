@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="ASKMarket trust and safety information: verification, payments, privacy, seller standards and current platform limitations.">
+<meta name="theme-color" content="#0b1538">
+<title>Trust & Safety — ASKMarket</title>
+<style>
+:root{--navy:#0b1538;--royal:#172b63;--bronze:#bd8950;--paper:#f5f2ec;--ink:#17203e;--muted:#66708a;--line:#e5ddd1;--green:#276448;--amber:#8a5a13}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:linear-gradient(110deg,var(--navy),var(--royal));color:white;padding:22px max(20px,calc((100% - 980px)/2));border-bottom:2px solid var(--bronze)}
+.brand{font-size:25px;font-weight:850;letter-spacing:-.8px}.brand span{color:#d8aa72}
+main{max-width:980px;margin:30px auto;padding:0 20px 64px}
+h1{font-size:clamp(32px,5vw,46px);line-height:1.1;margin:10px 0}h2{font-size:21px;color:var(--royal);margin:0 0 8px}
+p,li{color:#414b66}.muted{color:var(--muted);font-size:13px}
+.hero,.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:22px;margin:16px 0}
+.hero{border-top:4px solid var(--bronze)}
+.status{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:30px;background:#fff1d8;color:var(--amber);font-size:12px;font-weight:750}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.item{background:white;border:1px solid var(--line);border-radius:16px;padding:18px}
+a{color:var(--royal)}nav{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}nav a{background:var(--royal);color:white;padding:9px 13px;border-radius:9px;text-decoration:none;font-size:14px}
+.callout{border-left:4px solid var(--bronze);padding:10px 14px;background:#faf6ee;border-radius:8px}
+footer{font-size:12px;color:var(--muted);margin-top:24px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}main{margin-top:20px}}
+</style>
+</head>
+<body>
+<header><div class="brand">ASK<span>Market</span></div><div>Trust, safety & transparency</div></header>
+<main>
+<p class="muted">Platform information · Updated 9 November 2026</p>
+<h1>Trust should be earned, not claimed.</h1>
+<section class="hero">
+<span class="status">Pre-launch / prototype disclosures</span>
+<p>ASKMarket is being developed as a wholesale and retail marketplace. This page explains what protections are present, what remains incomplete, and what buyers and sellers should not assume.</p>
+<div class="callout"><b>Important:</b> ASKMarket is not currently represented as a licensed financial institution, regulated investment platform, certified marketplace, or independently audited service. A successful website deployment is not proof of legal approval or provider authorization.</div>
+</section>
+<section class="grid">
+<div class="item"><h2>Accounts & identity checks</h2><p>Account sign-up uses the configured authentication provider when credentials are supplied by the operator. KYC/KYB screens are present, but a verification badge must only be shown after a trusted provider decision is received and checked server-side. A submitted application is not approval.</p><span class="status">Verification availability depends on configuration</span></div>
+<div class="item"><h2>Payments & wallet</h2><p>Real deposits, withdrawals, checkout, escrow and payouts are not active. Payment API routes intentionally reject requests until approved provider integrations, ledger controls and verification are complete. Never send money to a person or wallet address claiming to represent ASKMarket.</p><span class="status">Real-money transactions disabled</span></div>
+<div class="item"><h2>Listings & seller status</h2><p>Some catalogue entries are demonstration listings. A sample listing or sample seller label is not proof of stock, authenticity, seller identity or delivery capability. Confirm seller details and product terms before making any off-platform arrangement.</p><span class="status">Demo content may be displayed</span></div>
+<div class="item"><h2>Privacy & data</h2><p>Account and verification features may process personal data when configured. The privacy notice is still a draft and must be completed with the legal operator identity, provider list, retention schedule, rights contact and cross-border transfer safeguards before public launch.</p><span class="status">Privacy notice requires legal review</span></div>
+<div class="item"><h2>Orders, shipping & refunds</h2><p>Do not assume an order has been accepted, paid, shipped or refunded unless the platform and relevant provider confirm it. Delivery estimates, shipping charges and seller-specific return conditions must be disclosed before a live checkout is enabled.</p><span class="status">Live fulfilment workflow not confirmed</span></div>
+<div class="item"><h2>Investments & earnings</h2><p>Creator rewards, referrals, advertising income and investor/shareholding features are not guaranteed returns or an offer to invest. No one should transfer funds in expectation of profit or equity through this prototype. Any future securities activity requires separate legal and regulatory review.</p><span class="status">No investment offer or guaranteed earnings</span></div>
+</section>
+<section class="panel">
+<h2>How we intend to protect the marketplace</h2>
+<ul>
+<li>Require identity and business checks appropriate to each seller and category, with approval status verified by the server.</li>
+<li>Keep payment-provider secrets on the server; never ask users for wallet seed phrases or private keys.</li>
+<li>Use authenticated, signed provider webhooks, idempotency, reconciliation and a properly controlled ledger before enabling payments.</li>
+<li>Provide clear product descriptions, seller terms, shipping fees, refund rules and dispute handling before checkout.</li>
+<li>Restrict unlawful, counterfeit, stolen, unsafe and prohibited goods; investigate reports and preserve appropriate audit records.</li>
+<li>Apply least-privilege access, secure session handling, backups, monitoring, incident response and independent security testing.</li>
+</ul>
+</section>
+<section class="panel">
+<h2>Policies & platform documents</h2>
+<p>The linked legal documents are drafts. They are not a substitute for advice from a Kenyan-qualified lawyer and must not be treated as final until the operator details, official contacts and applicable obligations have been verified.</p>
+<nav>
+<a href="/legal/terms.html">Terms of service</a><a href="/legal/privacy.html">Privacy notice</a><a href="/legal/returns.html">Returns & refunds</a><a href="/legal/seller-standards.html">Seller standards</a><a href="/">Return to marketplace</a>
+</nav>
+</section>
+<section class="panel">
+<h2>Report a concern</h2>
+<p>For account, listing or transaction concerns, use the support channel displayed inside the live service only after verifying that it belongs to ASKMarket. Do not send passwords, one-time codes, private keys, seed phrases, identity documents or full payment credentials in ordinary messages.</p>
+<p><b>Security disclosure contact:</b> A dedicated verified security-reporting email and escalation contact have not yet been published. This is a launch blocker. Do not post sensitive vulnerability details in public issue trackers.</p>
+<p><b>Legal operator:</b> The registered operating entity, company number, registered address and official complaint contact have not yet been confirmed on this page. This is also a launch blocker.</p>
+</section>
+<footer>ASKMarket · Transparency statement. This page describes current product boundaries; it does not certify legal compliance, provider approval, product authenticity, seller verification or security audit status.</footer>
+</main>
+</body></html>
