@@ -73,3 +73,23 @@ The application includes an authenticated wallet interface for Kenyan M-Pesa and
 The wallet schema is provided in `supabase/migrations/202611060003_wallet.sql`. Review and apply it to a staging Supabase project first; it enables row-level security and denies client-side balance/transaction writes. Do not apply directly to production without backup and review.
 
 Before enabling funds, complete Kenyan mobile-money merchant onboarding and sandbox testing; choose an appropriately regulated crypto custody/payment partner; implement signed webhooks, idempotency, reconciliation, verified KYC/KYB gates, MFA, withdrawal controls, audit trails and independent security review. Never place provider secrets or private keys in the browser or GitHub.
+
+## Seller listings and product photography
+
+The seller workflow on the `feature/persistent-seller-listings` branch supports consent-first photo selection, an explicit confirmation before upload, optional AI background editing, and durable Supabase Storage uploads. Sellers can choose Graphite & Gold, Royal Navy & Bronze, or Clean Light display themes. New submissions are forced to `pending_review`; buyers see only listings approved by a trusted moderation process.
+
+Apply `supabase/migrations/202611090001_product_image_storage.sql` to a staging Supabase project first. It expects the canonical `public.profiles.id` key created by `202611060002_marketplace_core.sql`. The seller-role RLS check must use `profiles.id = auth.uid()`; do not apply competing legacy profile schemas to the same database.
+
+AI image editing requires a signed-in seller, explicit in-app consent, and a server-only `OPENAI_API_KEY`. The original product should remain recognizable, and sellers must review the result before submission. Android controls the system photo picker; the app's "Always ask" preference adds an in-app confirmation and does not override Android OS permissions.
+
+## Shopify storefront discovery
+
+Shopify product discovery and the Shopify-hosted customer-account link are proposed in [PR #14](https://github.com/joshmurutu-maker/ASKMarket/pull/14). That work uses the public Storefront API; it does not enable Shopify checkout, private Admin API access, or customer-data synchronization. It is not part of this branch until the pull request is merged.
+
+## Trust, compliance and blockchain release gates
+
+- The legal/trust pages are draft materials, not legal certification. Replace operator identity and support details and obtain Kenyan legal review before launch.
+- Keep M-Pesa and crypto deposits, withdrawals, payouts, escrow and real-money transfers disabled until provider onboarding, signed webhooks, reconciliation, ledger controls, KYC/KYB review, and security testing are complete.
+- `ASKMarket()` and selector `0xa397fc12` remain provisional metadata. Independently verify the selector and contract behavior, complete review, and deploy to Sepolia before describing any contract as live. Mainnet and production transfers remain disabled.
+- A Vercel deployment does not apply Supabase migrations or configure environment variables. Apply migrations to staging first and configure secrets server-side in Vercel.
+
