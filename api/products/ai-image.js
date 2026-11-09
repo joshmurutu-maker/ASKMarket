@@ -15,6 +15,10 @@ export default async function handler(req,res){
     const roleRes=await fetch(roleUrl,{headers:{apikey:anon,Authorization:auth}});
     const roles=await roleRes.json().catch(()=>[]);
     if(!roleRes.ok||!["seller","distributor","retailer"].includes(roles?.[0]?.role))return json(res,403,{error:"Only approved seller, distributor or retailer profiles can generate listing images."});
+    const quota=await fetch(new URL("/rest/v1/rpc/consume_product_image_quota",supabase),{method:"POST",headers:{apikey:anon,Authorization:auth,"Content-Type":"application/json"},body:"{}"});
+    const allowed=await quota.json().catch(()=>false);
+    if(!quota.ok)return json(res,503,{error:"AI image quota service is unavailable. Apply the AI image migration first."});
+    if(allowed!==true)return json(res,429,{error:"Daily AI image limit reached. You can generate up to five product images per 24 hours."});
     const body=req.body||{},name=typeof body.name==="string"?body.name.trim():"",category=typeof body.category==="string"?body.category.trim():"",description=typeof body.description==="string"?body.description.trim():"";
     if(name.length<3||name.length>160||category.length>80||description.length>1200)return json(res,400,{error:"Provide a valid product name, category and concise description."});
     const prompt="Create one photorealistic, premium studio catalogue photograph of this exact product concept: "+name+". Category: "+category+". Seller description: "+description+". Show one clear item on a clean neutral dark graphite studio background, tasteful cyan and violet neon rim lighting and realistic materials. Product-only composition, centered, accurate to the written description. No text, labels, logos, watermarks, fake certifications, people, packaging claims or invented brand marks. This is an illustrative AI-generated listing image, not proof of the actual item's condition or provenance.";
