@@ -25,9 +25,11 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
+      const authorization = req.headers.authorization || "";
+      const headers = { apikey: key, Authorization: authorization.startsWith("Bearer ") ? authorization : "Bearer " + key };
       const response = await fetch(
-        url + "/rest/v1/products?select=id,name,description,category,price,currency,quantity,status,image_url,seller_id,created_at&status=eq.published&order=created_at.desc&limit=100",
-        { headers: { apikey: key, Authorization: "Bearer " + key } }
+        url + "/rest/v1/seller_listings?select=id,seller_id,name,description,category,price,currency,quantity,image_url,status,moderation_note,created_at&order=created_at.desc&limit=100",
+        { headers }
       );
       const rows = await response.json().catch(() => []);
       if (!response.ok) return send(res, 502, { error: "Could not load marketplace listings." });
@@ -41,7 +43,7 @@ export default async function handler(req, res) {
 
     const authorization = req.headers.authorization || "";
     const user = await verifyUser(url, key, authorization);
-    if (!user?.id) return send(res, 401, { error: "Sign in before publishing a product." });
+    if (!user?.id) return send(res, 401, { error: "Sign in before submitting a product." });
 
     const body = req.body || {};
     const name = typeof body.name === "string" ? body.name.trim() : "";
@@ -60,13 +62,14 @@ export default async function handler(req, res) {
     let uploadedPath = null;
     if (body.image) {
       const match = typeof body.image === "string" && body.image.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/);
-      if (!match || body.image.length > 3500000) return send(res, 400, { error: "Product photo must be a JPG, PNG or WebP image under 2.5 MB after optimization." });
+      if (!match || body.image.length > 3500000) return send(res, 400, { error: "Product photo must be a JPG, PNG or WebP image within the upload size limit." });
       const mime = "image/" + match[1];
       const ext = match[1] === "jpeg" ? "jpg" : match[1];
       const bytes = Buffer.from(match[2], "base64");
       if (!bytes.length || bytes.length > 2600000) return send(res, 400, { error: "Product photo is too large." });
       uploadedPath = user.id + "/" + crypto.randomUUID() + "." + ext;
-      const upload = await fetch(url + "/storage/v1/object/product-images/" + uploadedPath.split("/").map(encodeURIComponent).join("/"), {
+      const storagePath = uploadedPath.split("/").map(encodeURIComponent).join("/");
+      const upload = await fetch(url + "/storage/v1/object/product-images/" + storagePath, {
         method: "POST",
         headers: {
           apikey: key,
@@ -79,12 +82,12 @@ export default async function handler(req, res) {
       });
       if (!upload.ok) {
         const details = await upload.json().catch(() => ({}));
-        return send(res, upload.status === 403 ? 403 : 502, { error: details.message || details.error || "Could not store the product photo. Apply the product-image storage migration first." });
+        return send(res, upload.status === 403 ? 403 : 502, { error: details.message || details.error || "Could not store the product photo. Apply the product-image migration first." });
       }
-      imageUrl = url + "/storage/v1/object/public/product-images/" + uploadedPath.split("/").map(encodeURIComponent).join("/");
+      imageUrl = url + "/storage/v1/object/public/product-images/" + storagePath;
     }
 
-    const insert = await fetch(url + "/rest/v1/products?select=id,name,description,category,price,currency,quantity,status,image_url,seller_id,created_at", {
+    const insert = await fetch(url + "/rest/v1/seller_listings?select=id,seller_id,name,description,category,price,currency,quantity,image_url,status,moderation_note,created_at", {
       method: "POST",
       headers: {
         apikey: key,
@@ -100,8 +103,8 @@ export default async function handler(req, res) {
         price,
         currency: "KES",
         quantity,
-        status: "published",
-        image_url: imageUrl
+        image_url: imageUrl,
+        status: "pending_review"
       })
     });
     const rows = await insert.json().catch(() => []);
@@ -112,7 +115,7 @@ export default async function handler(req, res) {
           headers: { apikey: key, Authorization: authorization }
         }).catch(() => {});
       }
-      const message = rows?.message || rows?.details || "Could not save the listing. Confirm your account has a seller, distributor or retailer role and the database migrations are applied.";
+      const message = rows?.message || rows?.details || "Could not save the listing. Confirm your seller role and apply the seller-listings migration.";
       return send(res, insert.status === 401 || insert.status === 403 ? insert.status : 400, { error: message });
     }
     return send(res, 201, { product: rows[0] });
