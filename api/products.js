@@ -28,13 +28,20 @@ export default async function handler(req, res) {
   try {
     if (req.method === "GET") {
       const authorization = req.headers.authorization || "";
-      const headers = { apikey: key, Authorization: authorization.startsWith("Bearer ") ? authorization : "Bearer " + key };
+      const signedInUser = authorization.startsWith("Bearer ") ? await verifyUser(url, key, authorization) : null;
+      const headers = { apikey: key, Authorization: signedInUser ? authorization : "Bearer " + key };
       const response = await fetch(
         url + "/rest/v1/seller_listings?select=id,seller_id,name,description,category,price,currency,quantity,image_url,status,moderation_note,created_at&order=created_at.desc&limit=100",
         { headers }
       );
       const rows = await response.json().catch(() => []);
-      if (!response.ok) return send(res, 502, { error: "Could not load marketplace listings." });
+      if (!response.ok) {
+        const code = rows?.code || "";
+        if (response.status === 404 || code === "PGRST205" || code === "42P01") {
+          return send(res, 503, { error: "Seller listings are not initialized yet. Apply the seller-listings and product-image migration in Supabase SQL Editor." });
+        }
+        return send(res, 502, { error: "Could not load marketplace listings." });
+      }
       return send(res, 200, { products: Array.isArray(rows) ? rows : [] });
     }
 
