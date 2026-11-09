@@ -19,4 +19,4 @@ jobs:
           node --input-type=module --check < api/config.js
           node --input-type=module --check < api/verification/access-token.js
           node --input-type=module --check < api/wallet/deposit.js
-          node --input-type=module --check < api/wallet/withdrawal.js
+          node --input-type=module --check < api/wallet/withdrawal.js\n          node --input-type=module --check < api/products/index.js\n          node --input-type=module --check < api/products/ai-image.js
