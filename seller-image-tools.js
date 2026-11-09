@@ -127,7 +127,11 @@
     const photo = typeof product.image === "string" && (/^data:image\/(jpeg|png|webp);base64,/i.test(product.image) || /^https:\/\//i.test(product.image))
       ? '<div class="product-art" style="height:190px;background:#f4f1ea"><img src="' + safe(product.image) + '" alt="' + safe(product.name) + '" loading="lazy" style="width:100%;height:100%;object-fit:contain"></div>'
       : '<div class="product-art">' + safe(product.emoji || "📦") + "</div>";
-    return '<article class="card">' + photo + '<div class="card-body"><span class="tag">' + safe(product.cat) + '</span><h3>' + safe(product.name) + '</h3><div class="price">' + money(product.price) + '</div><div class="small">' + safe(product.qty || "MOQ not set") + " · " + safe(product.seller || "E-commerce seller") + '</div><div class="card-foot"><span class="small">Marketplace listing</span><button class="btn dark" onclick="addCart(\'' + safe(product.id) + '\')">Add to cart</button></div></div></article>';
+    const footer = product.status === "pending_review"
+      ? '<span class="tag">Review pending</span>'
+      : '<button class="btn dark" onclick="addCart(\\'' + safe(product.id) + '\\')">Add to cart</button>';
+    const label = product.status === "pending_review" ? "Submitted for review" : product.localOnly ? "Saved on this device" : product.status === "published" ? "Approved listing" : "Sample listing";
+    return '<article class="card">' + photo + '<div class="card-body"><span class="tag">' + safe(product.cat) + '</span><h3>' + safe(product.name) + '</h3><div class="price">' + money(product.price) + '</div><div class="small">' + safe(product.qty || "MOQ not set") + " · " + safe(product.seller || "E-commerce seller") + '</div><div class="card-foot"><span class="small">' + label + '</span>' + footer + '</div></div></article>';
   }
 
   window.productCard = productCard;
