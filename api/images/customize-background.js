@@ -20,11 +20,9 @@ export default async function handler(req, res) {
     if (!userResponse.ok) return res.status(401).json({ error: "Your session is invalid. Please sign in again." });
 
     const body = req.body || {};
-    const image = body.image;
-    const style = body.style;
-    if (typeof image !== "string" || !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(image) || image.length > 3500000) {
-      return res.status(400).json({ error: "Choose a valid JPG, PNG or WebP image within the upload size limit." });
-    }
+    const match = typeof body.image === "string" && body.image.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/);
+    if (!match || body.image.length > 3500000) return res.status(400).json({ error: "Choose a valid JPG, PNG or WebP image under the upload size limit." });
+
     const allowedStyles = [
       "clean white studio",
       "luxury bronze and graphite studio",
@@ -32,21 +30,26 @@ export default async function handler(req, res) {
       "minimal modern retail display",
       "warm lifestyle setting"
     ];
-    if (!allowedStyles.includes(style)) return res.status(400).json({ error: "Choose an available background style." });
+    if (!allowedStyles.includes(body.style)) return res.status(400).json({ error: "Choose an available background style." });
 
-    const prompt = "Edit this ecommerce product photograph. Replace only the background with a " + style + ". Preserve the actual product, its shape, proportions, colour, materials, labels, logo, text, packaging and all visible details as faithfully as possible. Keep the product fully visible, sharply focused, realistic and naturally lit. Do not add extra products, invented branding, watermarks, promotional text or prices. Professional marketplace product photography.";
+    const mime = "image/" + match[1];
+    const ext = match[1] === "jpeg" ? "jpg" : match[1];
+    const bytes = Buffer.from(match[2], "base64");
+    if (!bytes.length || bytes.length > 2600000) return res.status(400).json({ error: "Image is too large. Choose a smaller photo." });
+
+    const prompt = "Edit this ecommerce product photograph. Replace only the background with a " + body.style + ". Preserve the actual product, its shape, proportions, colour, materials, labels, logo, text, packaging and all visible details as faithfully as possible. Keep the product fully visible, sharply focused, realistic and naturally lit. Do not add extra products, invented branding, watermarks, promotional text or prices. Professional marketplace product photography.";
+    const form = new FormData();
+    form.append("model", process.env.OPENAI_IMAGE_MODEL || "gpt-image-2.5-sunburst");
+    form.append("prompt", prompt);
+    form.append("size", "auto");
+    form.append("quality", "medium");
+    form.append("output_format", "jpeg");
+    form.append("image", new Blob([bytes], { type: mime }), "product." + ext);
+
     const editResponse = await fetch("https://api.openai.com/v1/images/edits", {
       method: "POST",
-      headers: { Authorization: "Bearer " + openaiKey, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-image-2.5-sunburst",
-        images: [{ image_url: image }],
-        prompt,
-        output_format: "jpeg",
-        quality: "medium",
-        size: "auto",
-        n: 1
-      })
+      headers: { Authorization: "Bearer " + openaiKey },
+      body: form
     });
     const result = await editResponse.json().catch(() => ({}));
     if (!editResponse.ok) return res.status(502).json({ error: result.error?.message || "The AI image provider could not edit this photo." });

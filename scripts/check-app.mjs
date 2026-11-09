@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
+import { spawnSync } from "node:child_process";
 
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const requiredSections = ["home", "discover", "cart", "dashboard", "wallet", "earn", "investors", "profile", "settings"];
@@ -18,9 +19,15 @@ for (const path of ["../api/config.js", "../api/verification/access-token.js"]) 
 const imageTools = readFileSync(new URL("../seller-image-tools.js", import.meta.url), "utf8");
 new vm.Script(imageTools, { filename: "seller-image-tools.js" });
 const imageApi = readFileSync(new URL("../api/images/customize-background.js", import.meta.url), "utf8");
-new vm.Script(imageApi, { filename: "api/images/customize-background.js" });
-if (!imageApi.includes('auth.startsWith("Bearer ")')) throw new Error("AI image endpoint must require an authenticated session.");
+const productApi = readFileSync(new URL("../api/products.js", import.meta.url), "utf8");
+for (const [path, source] of [["api/images/customize-background.js", imageApi], ["api/products.js", productApi]]) {
+  const checked = spawnSync(process.execPath, ["--input-type=module", "--check"], { input: source, encoding: "utf8" });
+  if (checked.status !== 0) throw new Error("Invalid API module syntax in " + path + ": " + (checked.stderr || checked.stdout));
+}
+if (!imageApi.includes('authorization.startsWith("Bearer ")')) throw new Error("AI image endpoint must require an authenticated session.");
 if (!imageApi.includes("OPENAI_API_KEY")) throw new Error("AI image API key must remain server-side.");
+if (!productApi.includes('authorization.startsWith("Bearer ")')) throw new Error("Product API must authenticate sellers.");
+if (!productApi.includes("seller_listings")) throw new Error("Product API must use durable seller listings.");
 
 const migration = readFileSync(new URL("../supabase/migrations/202611060001_marketplace_core.sql", import.meta.url), "utf8");
 for (const table of ["profiles", "businesses", "products", "orders", "payment_intents", "ledger_entries", "verification_cases"]) {
@@ -35,6 +42,10 @@ const config = readFileSync(new URL("../api/config.js", import.meta.url), "utf8"
 if (!config.includes("accountServiceConfigured")) throw new Error("Config endpoint must expose account-service readiness.");
 if (/SUPABASE_SERVICE_ROLE_KEY|SUMSUB_SECRET_KEY/.test(config)) throw new Error("A server-only secret is referenced by the public config endpoint.");
 
+const sellerMigration = readFileSync(new URL("../supabase/migrations/202611090001_product_image_storage.sql", import.meta.url), "utf8");
+for (const required of ["seller_listings", "enable row level security", "product-images", "pending_review", "protect_seller_role_from_self_change"]) {
+  if (!sellerMigration.includes(required)) throw new Error("Seller listing migration missing: " + required);
+}
 const walletMigration = readFileSync(new URL("../supabase/migrations/202611060003_wallet.sql", import.meta.url), "utf8");
 for (const table of ["wallet_accounts", "wallet_transactions"]) {
   if (!walletMigration.includes("create table if not exists public." + table)) throw new Error("Missing wallet table: " + table);

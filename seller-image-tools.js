@@ -2,10 +2,16 @@
   "use strict";
   const form = document.getElementById("listingForm");
   if (!form) return;
+
   const input = document.getElementById("productImageInput");
   const status = document.getElementById("productImageStatus");
   const ask = document.getElementById("askBeforeProductImage");
+  const preview = document.getElementById("productImagePreview");
+  const previewWrap = document.getElementById("productImagePreviewWrap");
   let selectedImage = "";
+  let remoteListings = [];
+  let remoteLoaded = false;
+  let loadingListings = null;
 
   ask.checked = localStorage.getItem("ask-image-permission") !== "false";
   ask.addEventListener("change", function () {
@@ -42,9 +48,9 @@
         if (!context) { status.textContent = "Image processing is unavailable on this device."; return; }
         context.drawImage(img, 0, 0, canvas.width, canvas.height);
         selectedImage = canvas.toDataURL("image/jpeg", 0.72);
-        document.getElementById("productImagePreview").src = selectedImage;
-        document.getElementById("productImagePreviewWrap").classList.remove("hidden");
-        status.textContent = "Photo selected and optimized on this device. Not uploaded yet.";
+        preview.src = selectedImage;
+        previewWrap.classList.remove("hidden");
+        status.textContent = "Photo selected and optimized on this device. It has not been uploaded.";
       };
       img.onerror = function () { status.textContent = "Could not read this photo. Try another image."; };
       img.src = reader.result;
@@ -70,7 +76,7 @@
       const data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.error || "AI image customization is unavailable.");
       selectedImage = data.image;
-      document.getElementById("productImagePreview").src = selectedImage;
+      preview.src = selectedImage;
       status.textContent = "AI background customized. Review the result before saving.";
     } catch (error) {
       status.textContent = error.message;
@@ -79,46 +85,134 @@
     }
   });
 
-  // Intercept the demo listing form so a selected photo is included exactly once.
-  form.addEventListener("submit", function (event) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    if (selectedImage && ask.checked && !window.confirm("Save this product photo with the listing on this device?")) return;
-    const item = {
-      id: Date.now(),
-      name: document.getElementById("pname").value,
-      cat: document.getElementById("pcat").value,
-      price: Number(document.getElementById("pprice").value),
-      qty: "Min. " + document.getElementById("pqty").value,
-      seller: document.getElementById("pcontact").value || "Your business",
+  function mapProduct(row) {
+    return {
+      id: row.id,
+      name: row.name,
+      cat: row.category,
+      price: Number(row.price),
+      qty: "Available: " + Number(row.quantity || 0),
+      seller: "Marketplace seller",
+      status: row.status,
       emoji: "📦",
-      image: selectedImage
+      image: row.image_url || "",
+      description: row.description || "",
+      currency: row.currency || "KES"
     };
-    try {
-      custom.push(item);
-      localStorage.setItem("ask-listings", JSON.stringify(custom));
-    } catch {
-      status.textContent = "Could not save this image in browser storage. Try a smaller photo.";
-      return;
-    }
-    form.reset();
-    selectedImage = "";
-    document.getElementById("productImagePreviewWrap").classList.add("hidden");
-    document.getElementById("productImagePreview").removeAttribute("src");
-    status.textContent = "No image selected.";
-    alert("Product listing saved on this device.");
-    if (typeof renderProducts === "function") renderProducts();
-  }, true);
+  }
 
-  window.productCard = function (product) {
-    const safe = typeof escapeHTML === "function" ? escapeHTML : function (value) {
-      return String(value || "").replace(/[&<>"]/g, function (c) {
-        return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c];
-      });
-    };
-    const photo = product.image && /^data:image\/(jpeg|png|webp);base64,/i.test(product.image)
+  async function loadRemoteListings(force) {
+    if (remoteLoaded && !force) return remoteListings;
+    if (loadingListings && !force) return loadingListings;
+    const token = typeof getAccessToken === "function" ? getAccessToken() : null;
+    const headers = { "Accept": "application/json" };
+    if (token) headers.Authorization = "Bearer " + token;
+    loadingListings = fetch("/api/products", { headers })
+      .then(async function (response) {
+        const data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.error || "Could not load marketplace listings.");
+        remoteListings = Array.isArray(data.products) ? data.products.map(mapProduct) : [];
+        remoteLoaded = true;
+        return remoteListings;
+      })
+      .catch(function (error) {
+        remoteLoaded = false;
+        const target = document.getElementById("products");
+        if (target && !remoteListings.length) target.innerHTML = '<div class="empty">' + escapeHTML(error.message) + '</div>';
+        return remoteListings;
+      })
+      .finally(function () { loadingListings = null; });
+    return loadingListings;
+  }
+
+  function productCard(product) {
+    const safe = typeof escapeHTML === "function" ? escapeHTML : value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    const photo = typeof product.image === "string" && (/^data:image\/(jpeg|png|webp);base64,/i.test(product.image) || /^https:\/\//i.test(product.image))
       ? '<div class="product-art" style="height:190px;background:#f4f1ea"><img src="' + safe(product.image) + '" alt="' + safe(product.name) + '" loading="lazy" style="width:100%;height:100%;object-fit:contain"></div>'
       : '<div class="product-art">' + safe(product.emoji || "📦") + "</div>";
-    return '<article class="card">' + photo + '<div class="card-body"><span class="tag">' + safe(product.cat) + "</span><h3>" + safe(product.name) + '</h3><div class="price">' + money(product.price) + '</div><div class="small">' + safe(product.qty || "MOQ not set") + " · " + safe(product.seller || "E-commerce seller") + '</div><div class="card-foot"><span class="small">Seller listing</span><button class="btn dark" onclick="addCart(' + (Number(product.id) || 0) + ')">Add to cart</button></div></div></article>';
+    const footer = product.status === "pending_review"
+      ? '<span class="tag">Review pending</span>'
+      : '<button class="btn dark" type="button" data-add-cart="' + safe(product.id) + '">Add to cart</button>';
+    const label = product.status === "pending_review" ? "Submitted for review" : product.localOnly ? "Saved on this device" : product.status === "published" ? "Approved listing" : "Sample listing";
+    return '<article class="card">' + photo + '<div class="card-body"><span class="tag">' + safe(product.cat) + '</span><h3>' + safe(product.name) + '</h3><div class="price">' + money(product.price) + '</div><div class="small">' + safe(product.qty || "MOQ not set") + " · " + safe(product.seller || "E-commerce seller") + '</div><div class="card-foot"><span class="small">' + label + '</span>' + footer + '</div></div></article>';
+  }
+
+  window.productCard = productCard;
+  window.renderProducts = async function () {
+    const target = document.getElementById("products");
+    if (!target) return;
+    if (!remoteLoaded) target.innerHTML = '<div class="empty">Loading marketplace listings…</div>';
+    await loadRemoteListings(false);
+    const q = (document.getElementById("search")?.value || "").toLowerCase();
+    const category = document.getElementById("category")?.value || "";
+    const list = [...products, ...custom.map(function (p) { return Object.assign({}, p, { localOnly: true }); }), ...remoteListings].filter(function (p) {
+      return (!category || p.cat === category) && (p.name || "").toLowerCase().includes(q);
+    });
+    target.innerHTML = list.map(productCard).join("") || '<div class="empty">No matching products yet.</div>';
   };
+
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest("button[data-add-cart]");
+    if (button) window.addCart(button.dataset.addCart);
+  });
+
+  window.addCart = function (id) {
+    const product = [...products, ...custom, ...remoteListings].find(function (item) { return String(item.id) === String(id); });
+    if (!product) return;
+    if (product.status === "pending_review") { alert("This listing is awaiting marketplace review and cannot be purchased yet."); return; }
+    cart.push(product);
+    localStorage.setItem("ask-cart", JSON.stringify(cart));
+    document.getElementById("cartCount").textContent = cart.length;
+    alert("Added to your demo cart. Checkout remains disabled until payment and order services are approved.");
+  };
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const token = typeof getAccessToken === "function" ? getAccessToken() : null;
+    if (!token) {
+      status.textContent = "Sign in with a seller, distributor or retailer account before saving a marketplace listing.";
+      if (typeof show === "function") show("profile");
+      if (typeof setAuthMode === "function") setAuthMode("signin");
+      return;
+    }
+    if (selectedImage && ask.checked && !window.confirm("Upload this product photo and publish the listing to the shared marketplace?")) return;
+
+    const button = form.querySelector('button[type="submit"],button:not([type])');
+    if (button) button.disabled = true;
+    status.textContent = "Saving your listing and securely uploading its product photo…";
+    try {
+      const response = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify({
+          name: document.getElementById("pname").value.trim(),
+          category: document.getElementById("pcat").value,
+          price: Number(document.getElementById("pprice").value),
+          quantity: Number(document.getElementById("pqty").value),
+          description: "",
+          image: selectedImage || null
+        })
+      });
+      const data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.error || "Could not save the product listing.");
+      const item = mapProduct(data.product);
+      remoteListings.unshift(item);
+      remoteLoaded = true;
+      form.reset();
+      selectedImage = "";
+      previewWrap.classList.add("hidden");
+      preview.removeAttribute("src");
+      input.value = "";
+      status.textContent = "Submitted successfully. Your listing and product photo are stored in your account and will appear publicly after marketplace review.";
+      if (typeof window.renderProducts === "function") await window.renderProducts();
+      alert("Your listing has been submitted for marketplace review. You can see it in Discover while signed in.");
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }, true);
+
+  window.addEventListener("load", function () { loadRemoteListings(false); });
 })();
