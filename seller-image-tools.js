@@ -104,7 +104,10 @@
   async function loadRemoteListings(force) {
     if (remoteLoaded && !force) return remoteListings;
     if (loadingListings && !force) return loadingListings;
-    loadingListings = fetch("/api/products", { headers: { "Accept": "application/json" } })
+    const token = typeof getAccessToken === "function" ? getAccessToken() : null;
+    const headers = { "Accept": "application/json" };
+    if (token) headers.Authorization = "Bearer " + token;
+    loadingListings = fetch("/api/products", { headers })
       .then(async function (response) {
         const data = await response.json().catch(function () { return {}; });
         if (!response.ok) throw new Error(data.error || "Could not load marketplace listings.");
@@ -151,10 +154,10 @@
   window.addCart = function (id) {
     const product = [...products, ...custom, ...remoteListings].find(function (item) { return String(item.id) === String(id); });
     if (!product) return;
+    if (product.status === "pending_review") { alert("This listing is awaiting marketplace review and cannot be purchased yet."); return; }
     cart.push(product);
     localStorage.setItem("ask-cart", JSON.stringify(cart));
     document.getElementById("cartCount").textContent = cart.length;
-    if (product.status === "pending_review") { alert("This listing is awaiting marketplace review and cannot be purchased yet."); return; }
     alert("Added to your demo cart. Checkout remains disabled until payment and order services are approved.");
   };
 
