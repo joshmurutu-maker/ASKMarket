@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
       const endpoint = new URL("/rest/v1/products", url);
-      endpoint.searchParams.set("select", "id,name,description,category,price,currency,quantity,seller_id,created_at");
+      endpoint.searchParams.set("select", "id,name,description,category,price,currency,quantity,seller_id,image_url,created_at");
       endpoint.searchParams.set("status", "eq.published");
       endpoint.searchParams.set("order", "created_at.desc");
       endpoint.searchParams.set("limit", "100");
@@ -41,19 +41,19 @@ export default async function handler(req, res) {
     const description = typeof body.description === "string" ? body.description.trim() : "";
     const category = body.category;
     const price = Number(body.price);
-    const quantity = Number(body.quantity);
+    const quantity = Number(body.quantity);\n    const imageUrl = typeof body.image_url === "string" ? body.image_url : "";
     if (name.length < 3 || name.length > 160) return json(res, 400, { error: "Product name must be 3–160 characters." });
     if (!CATEGORIES.has(category)) return json(res, 400, { error: "Choose a valid product category." });
     if (!Number.isFinite(price) || price <= 0 || price > 1000000000) return json(res, 400, { error: "Enter a valid positive price." });
     if (!Number.isSafeInteger(quantity) || quantity < 0 || quantity > 1000000000) return json(res, 400, { error: "Enter a valid available quantity." });
-    if (description.length > 5000) return json(res, 400, { error: "Description must be 5,000 characters or fewer." });
+    if (description.length > 5000) return json(res, 400, { error: "Description must be 5,000 characters or fewer." });\n    let image; try { image = new URL(imageUrl); } catch { return json(res, 400, { error: "Generate an AI product image before publishing." }); }\n    const expectedPrefix = new URL("/storage/v1/object/public/product-images/" + user.id + "/", url).toString();\n    if (!imageUrl.startsWith(expectedPrefix) || image.origin !== new URL(url).origin) return json(res, 400, { error: "Use the AI-generated image saved to your seller account." });
     const endpoint = new URL("/rest/v1/products", url);
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { ...headers, Authorization: auth, Prefer: "return=representation" },
       body: JSON.stringify({
         seller_id: user.id, name, description, category, price,
-        currency: "KES", quantity, status: "published"
+        currency: "KES", quantity, image_url: imageUrl, status: "published"
       })
     });
     const result = await response.json().catch(() => ({}));
