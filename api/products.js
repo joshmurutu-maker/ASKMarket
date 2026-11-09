@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 function send(res, status, body) {
   return res.status(status).json(body);
 }
@@ -67,7 +69,7 @@ export default async function handler(req, res) {
       const ext = match[1] === "jpeg" ? "jpg" : match[1];
       const bytes = Buffer.from(match[2], "base64");
       if (!bytes.length || bytes.length > 2600000) return send(res, 400, { error: "Product photo is too large." });
-      uploadedPath = user.id + "/" + crypto.randomUUID() + "." + ext;
+      uploadedPath = user.id + "/" + randomUUID() + "." + ext;
       const storagePath = uploadedPath.split("/").map(encodeURIComponent).join("/");
       const upload = await fetch(url + "/storage/v1/object/product-images/" + storagePath, {
         method: "POST",
