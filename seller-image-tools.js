@@ -93,9 +93,8 @@
       image: selectedImage
     };
     try {
-      const listings = JSON.parse(localStorage.getItem("ask-listings") || "[]");
-      listings.push(item);
-      localStorage.setItem("ask-listings", JSON.stringify(listings));
+      custom.push(item);
+      localStorage.setItem("ask-listings", JSON.stringify(custom));
     } catch (error) {
       status.textContent = "Could not save this image in browser storage. Try a smaller photo.";
       return;
