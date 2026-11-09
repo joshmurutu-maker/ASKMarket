@@ -36,3 +36,10 @@ New: `OPENAI_API_KEY` (server-only; image generation cost applies).
 
 ## Release gate
 This PR is not a legal certification and must not be merged/deployed as a declaration of compliance. Apply database migration to staging, test role/RLS boundaries and AI image storage, run security review, fill business identity fields, and obtain counsel approval before production publication.
+
+## Blocking schema compatibility issue discovered during review
+The repository currently contains two competing core migrations:
+- `202611060001_marketplace_core.sql` defines `profiles.user_id` and a business-based catalogue (`products.business_id`, `unit_price_minor`, `available_quantity`, `image_urls`).
+- `202611060002_marketplace_core.sql` attempts to define `profiles.id` and a seller-based catalogue (`products.seller_id`, `price`, `quantity`, `image_url`).
+
+Because both migrations create the same table names with `create table if not exists`, applying them in sequence does not reconcile the columns. Later functions, policies and the new AI image route can reference columns that do not exist in the schema created by the earlier migration. This must be reconciled into one canonical schema before applying migrations or enabling seller publishing. Do not apply the AI image migration to a database with the unresolved schema. PR #9 remains draft and is not production-ready.
