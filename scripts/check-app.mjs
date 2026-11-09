@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-const requiredSections = ["home", "discover", "cart", "dashboard", "wallet", "earn", "investors", "profile"];
+const requiredSections = ["home", "discover", "cart", "dashboard", "wallet", "earn", "investors", "profile", "settings"];
 for (const id of requiredSections) {
   if (!html.includes('id="' + id + '"')) throw new Error("Missing app section: " + id);
 }
@@ -15,6 +15,13 @@ for (const path of ["../api/config.js", "../api/verification/access-token.js"]) 
   const source = readFileSync(new URL(path, import.meta.url), "utf8");
   if (source.includes("\\n")) throw new Error("Escaped newline found in API module: " + path);
 }
+const imageTools = readFileSync(new URL("../seller-image-tools.js", import.meta.url), "utf8");
+new vm.Script(imageTools, { filename: "seller-image-tools.js" });
+const imageApi = readFileSync(new URL("../api/images/customize-background.js", import.meta.url), "utf8");
+new vm.Script(imageApi, { filename: "api/images/customize-background.js" });
+if (!imageApi.includes('auth.startsWith("Bearer ")')) throw new Error("AI image endpoint must require an authenticated session.");
+if (!imageApi.includes("OPENAI_API_KEY")) throw new Error("AI image API key must remain server-side.");
+
 const migration = readFileSync(new URL("../supabase/migrations/202611060001_marketplace_core.sql", import.meta.url), "utf8");
 for (const table of ["profiles", "businesses", "products", "orders", "payment_intents", "ledger_entries", "verification_cases"]) {
   if (!migration.includes("create table if not exists public." + table)) throw new Error("Missing core table: " + table);
@@ -40,4 +47,4 @@ for (const path of ["../api/wallet/deposit.js", "../api/wallet/withdrawal.js"]) 
   if (!source.includes("return res.status(503)")) throw new Error("Wallet API must remain fail-closed until provider integration: " + path);
   if (source.includes("\\n")) throw new Error("Escaped newline found in wallet API module: " + path);
 }
-\nconsole.log("ASKMarket static checks passed.");
+console.log("ASKMarket static checks passed.");
