@@ -1,6 +1,22 @@
 -- Durable seller listings and product image storage.
 -- Seller submissions are private to their owner until approved by a trusted moderation process.
 
+create or replace function public.protect_seller_role_from_self_change()
+returns trigger language plpgsql
+as $$
+begin
+  if auth.uid() is not null and new.role is distinct from old.role then
+    raise exception 'Account role changes require trusted review';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_protect_seller_role on public.profiles;
+create trigger profiles_protect_seller_role
+before update on public.profiles
+for each row execute function public.protect_seller_role_from_self_change();
+
 create table if not exists public.seller_listings (
   id uuid primary key default gen_random_uuid(),
   seller_id uuid not null references auth.users(id) on delete cascade,
