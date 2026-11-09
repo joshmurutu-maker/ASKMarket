@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10251d">
+<title>Inbox | ASKMarket</title>
+<style>
+:root{--ink:#14251e;--muted:#68766f;--green:#176b4b;--lime:#c9ef76;--paper:#f5f7f2;--line:#e4e9e1;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0}.top{background:#10251d;color:#fff;padding:14px max(18px,calc((100% - 1180px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-size:22px;font-weight:850;letter-spacing:-1px}.brand span{color:var(--lime)}.top a{color:#dce9df;text-decoration:none;font-weight:650}
+.wrap{max-width:1180px;margin:auto;padding:26px 18px 50px}.heading{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:18px}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--green);font-weight:800}.heading h1{font-size:clamp(28px,4vw,38px);line-height:1.1;letter-spacing:-1.5px;margin:5px 0}.sub{color:var(--muted);margin:0}.status{font-size:12px;color:var(--muted);padding:7px 10px;border-radius:20px;background:#eaf0e8}
+.layout{display:grid;grid-template-columns:340px minmax(0,1fr);height:min(720px,calc(100vh - 190px));min-height:520px;background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 10px 35px #10251d0b}
+.sidebar{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}.side-head{padding:18px;border-bottom:1px solid var(--line)}.side-head h2{font-size:17px;margin:0 0 12px}.search{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;outline:none}.search:focus,.composer textarea:focus,.new-chat select:focus{border-color:var(--green)}
+.conversations{overflow:auto;flex:1}.conv{display:flex;gap:11px;padding:14px 16px;border-bottom:1px solid #f0f2ee;cursor:pointer;text-align:left;background:#fff;width:100%;color:inherit}.conv:hover,.conv.active{background:#f1f7ef}.avatar{width:40px;height:40px;border-radius:50%;background:#e8f1e5;color:var(--green);display:grid;place-items:center;font-weight:850;flex:none}.conv-main{min-width:0;flex:1}.conv-top{display:flex;justify-content:space-between;gap:8px}.conv-name{font-weight:800;font-size:13px}.conv-time{font-size:10px;color:var(--muted);white-space:nowrap}.conv-product{font-size:11px;color:var(--green);font-weight:750}.conv-preview{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.empty-list{padding:22px;color:var(--muted);font-size:13px}
+.chat{display:flex;flex-direction:column;min-width:0;min-height:0}.chat-head{padding:15px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:11px}.chat-head h2{font-size:15px;margin:0}.chat-head p{font-size:11px;color:var(--muted);margin:2px 0 0}.chat-head .avatar{width:38px;height:38px}.messages{flex:1;overflow:auto;padding:22px;display:flex;flex-direction:column;gap:11px;background:linear-gradient(#fbfcfa,#fff)}.bubble-row{display:flex}.bubble-row.mine{justify-content:flex-end}.bubble{max-width:min(76%,520px);padding:10px 13px;border-radius:15px 15px 15px 4px;background:#eef3ec;color:var(--ink);overflow-wrap:anywhere}.mine .bubble{background:#163b2b;color:#fff;border-radius:15px 15px 4px 15px}.bubble p{margin:0;white-space:pre-wrap}.bubble time{display:block;font-size:10px;opacity:.68;text-align:right;margin-top:5px}.composer{padding:13px 16px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:end}.composer textarea{resize:none;min-height:44px;max-height:120px;flex:1;padding:11px 13px;border:1px solid var(--line);border-radius:12px;outline:none}.send,.primary{background:var(--lime);color:var(--ink);font-weight:800;border-radius:11px;padding:12px 17px}.send:disabled{opacity:.5;cursor:not-allowed}.welcome{margin:auto;text-align:center;padding:35px;max-width:420px}.welcome .symbol{font-size:44px}.welcome h2{margin:8px 0}.welcome p{color:var(--muted);font-size:13px}
+.new-chat{padding:14px 16px;border-top:1px solid var(--line);background:#fbfcfa}.new-chat label{display:block;font-size:11px;font-weight:800;margin-bottom:6px}.new-chat select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:8px;outline:none}.new-chat button{width:100%}.notice{padding:10px 13px;background:#f2f6e9;border-radius:10px;color:#53614b;font-size:12px;margin-top:12px}
+@media(max-width:720px){.wrap{padding:18px 10px}.heading{align-items:start;flex-direction:column}.layout{grid-template-columns:1fr;height:calc(100dvh - 175px);min-height:480px}.sidebar{border-right:0}.chat{display:none}.layout.chat-open .sidebar{display:none}.layout.chat-open .chat{display:flex}.chat-head{padding:12px}.back{display:inline-flex!important}.messages{padding:14px}.bubble{max-width:88%}.new-chat{padding:10px 12px}.side-head{padding:12px}.conv{padding:11px 13px}}
+.back{display:none;background:#f0f3ee;border-radius:9px;padding:7px 10px;font-weight:800}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand">ASK<span>Market</span></div><a href="/">← Back to marketplace</a></header>
+<main class="wrap">
+  <div class="heading"><div><div class="eyebrow">Marketplace communication</div><h1>Your inbox</h1><p class="sub">Talk directly with buyers and sellers about products and orders.</p></div><div id="connection" class="status">Connecting securely…</div></div>
+  <div class="layout" id="layout">
+    <aside class="sidebar">
+      <div class="side-head"><h2>Messages</h2><input class="search" id="search" type="search" placeholder="Search conversations" aria-label="Search conversations"></div>
+      <div class="conversations" id="conversationList"><div class="empty-list">Loading your conversations…</div></div>
+      <div class="new-chat" id="newChat" hidden><label for="productSelect">Ask a seller about a product</label><select id="productSelect"><option value="">Choose a product</option></select><button class="primary" id="startChat" type="button">Message seller</button></div>
+    </aside>
+    <section class="chat">
+      <div class="chat-head" id="chatHead"><button class="back" id="back" type="button">←</button><div class="avatar">A</div><div><h2>Choose a conversation</h2><p>Private buyer and seller messages</p></div></div>
+      <div class="messages" id="messages"><div class="welcome"><div class="symbol">✉️</div><h2>Keep business moving</h2><p>Select a conversation to read messages, or start a product enquiry from the panel.</p></div></div>
+      <form class="composer" id="composer" hidden><textarea id="messageInput" maxlength="4000" rows="1" placeholder="Write a message…" required aria-label="Write a message"></textarea><button class="send" id="send" type="submit">Send</button></form>
+    </section>
+  </div>
+  <div class="notice">Keep payments on ASKMarket and never share passwords, one-time codes or wallet recovery phrases in chat.</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const layout=$("layout"),list=$("conversationList"),messagesEl=$("messages"),connection=$("connection");
+  let client=null,user=null,profile=null,conversations=[],active=null,channel=null,poll=null,products=[];
+  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const dateLabel=value=>{if(!value)return"";const d=new Date(value);return d.toLocaleDateString([], {month:"short",day:"numeric"})};
+  const timeLabel=value=>{if(!value)return"";return new Date(value).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})};
+  function fail(message){connection.textContent=message;connection.style.background="#fff0e8";connection.style.color="#8a3b1e"}
+  function initials(name){return (name||"M").trim().split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase()}
+  function otherId(c){return c.buyer_id===user.id?c.seller_id:c.buyer_id}
+  function memberName(c){const m=c.members?.[otherId(c)];return m?(m.business_name||m.full_name|| (m.role==="buyer"?"Buyer":"Seller")):(c.buyer_id===user.id?"Seller":"Buyer")}
+  function productName(c){return c.product?.name||"Product enquiry"}
+  async function init(){
+    const session=JSON.parse(sessionStorage.getItem("ask-session")||"null");
+    if(!session?.access_token){fail("Sign in required");list.innerHTML='<div class="empty-list">Please <a href="/#profile">sign in</a> to use your inbox.</div>';return}
+    const cfgRes=await fetch("/api/config");
+    if(!cfgRes.ok)throw new Error("Account service unavailable");
+    const cfg=await cfgRes.json();
+    if(!cfg.supabaseUrl||!cfg.supabaseAnonKey)throw new Error("Supabase is not configured");
+    client=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},global:{headers:{Authorization:"Bearer "+session.access_token}}});
+    const auth=await client.auth.getUser(session.access_token);
+    if(auth.error||!auth.data.user)throw new Error("Your session expired. Sign in again.");
+    user=auth.data.user;
+    const p=await client.from("profiles").select("id,full_name,role").eq("id",user.id).single();
+    if(p.error)throw p.error;
+    profile=p.data;
+    $("newChat").hidden=profile.role!=="buyer";
+    connection.textContent="Secure connection";
+    await loadProducts();
+    await loadConversations();
+    if(conversations.length)openConversation(conversations[0].id);
+    if(new URLSearchParams(location.search).get("product")) {
+      $("productSelect").value=new URLSearchParams(location.search).get("product");
+      if($("productSelect").value)await startConversation();
+    }
+    if(poll)clearInterval(poll);
+    poll=setInterval(()=>{loadConversations();if(active)loadMessages(active.id)},5000);
+  }
+  async function loadProducts(){
+    if(profile.role!=="buyer")return;
+    const r=await client.from("products").select("id,name,seller_id").eq("status","published").order("created_at",{ascending:false}).limit(100);
+    if(r.error)throw r.error;
+    products=r.data||[];
+    $("productSelect").innerHTML='<option value="">Choose a product</option>'+products.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join("");
+  }
+  async function loadConversations(){
+    if(!client||!user)return;
+    const r=await client.from("marketplace_conversations").select("id,product_id,buyer_id,seller_id,last_message_at,last_message_preview,created_at").or("buyer_id.eq."+user.id+",seller_id.eq."+user.id).order("last_message_at",{ascending:false});
+    if(r.error)throw r.error;
+    const rows=r.data||[];
+    const ids=[...new Set(rows.flatMap(c=>[c.buyer_id,c.seller_id]))];
+    const productIds=[...new Set(rows.map(c=>c.product_id))];
+    const [members,prods]=await Promise.all([
+      ids.length?client.from("marketplace_member_directory").select("id,full_name,business_name,role").in("id",ids):Promise.resolve({data:[]}),
+      productIds.length?client.from("products").select("id,name").in("id",productIds):Promise.resolve({data:[]})
+    ]);
+    const memberMap={};(members.data||[]).forEach(m=>memberMap[m.id]=m);
+    const productMap={};(prods.data||[]).forEach(p=>productMap[p.id]=p);
+    conversations=rows.map(c=>({...c,members:memberMap,product:productMap[c.product_id]}));
+    renderConversations();
+  }
+  function renderConversations(){
+    const q=$("search").value.trim().toLowerCase();
+    const rows=conversations.filter(c=>(memberName(c)+" "+productName(c)+" "+(c.last_message_preview||"")).toLowerCase().includes(q));
+    list.innerHTML=rows.length?rows.map(c=>'<button type="button" class="conv '+(active?.id===c.id?"active":"")+'" data-id="'+esc(c.id)+'"><span class="avatar">'+esc(initials(memberName(c)))+'</span><span class="conv-main"><span class="conv-top"><span class="conv-name">'+esc(memberName(c))+'</span><span class="conv-time">'+esc(dateLabel(c.last_message_at))+'</span></span><span class="conv-product">'+esc(productName(c))+'</span><span class="conv-preview">'+esc(c.last_message_preview||"No messages yet")+'</span></span></button>').join(""):'<div class="empty-list">No conversations yet. Start by asking a seller about a product.</div>';
+  }
+  async function openConversation(id){
+    active=conversations.find(c=>c.id===id)||null;
+    if(!active)return;
+    layout.classList.add("chat-open");
+    const name=memberName(active),role=active.buyer_id===user.id?"Seller":"Buyer";
+    $("chatHead").innerHTML='<button class="back" id="back" type="button">←</button><div class="avatar">'+esc(initials(name))+'</div><div><h2>'+esc(name)+'</h2><p>'+esc(role+" · "+productName(active))+'</p></div>';
+    $("back").addEventListener("click",()=>layout.classList.remove("chat-open"));
+    $("composer").hidden=false;
+    await loadMessages(id);
+    if(channel)await client.removeChannel(channel);
+    channel=client.channel("marketplace-chat-"+id).on("postgres_changes",{event:"INSERT",schema:"public",table:"marketplace_messages",filter:"conversation_id=eq."+id},payload=>{if(active?.id===id)appendMessage(payload.new)}).subscribe();
+    renderConversations();
+  }
+  function appendMessage(m){
+    if(messagesEl.querySelector('[data-message="'+m.id+'"]'))return;
+    const mine=m.sender_id===user.id;
+    const row=document.createElement("div");row.className="bubble-row"+(mine?" mine":"");row.dataset.message=m.id;
+    const bubble=document.createElement("div");bubble.className="bubble";
+    const p=document.createElement("p");p.textContent=m.body;
+    const time=document.createElement("time");time.textContent=timeLabel(m.created_at);
+    bubble.append(p,time);row.appendChild(bubble);messagesEl.appendChild(row);messagesEl.scrollTop=messagesEl.scrollHeight;
+  }
+  async function loadMessages(id){
+    const r=await client.from("marketplace_messages").select("id,conversation_id,sender_id,body,created_at").eq("conversation_id",id).order("created_at",{ascending:true}).limit(300);
+    if(r.error)throw r.error;
+    messagesEl.innerHTML="";
+    if(!(r.data||[]).length){messagesEl.innerHTML='<div class="welcome"><div class="symbol">👋</div><h2>Start the conversation</h2><p>Ask a question about the product, price, availability or delivery.</p></div>';return}
+    r.data.forEach(appendMessage);
+  }
+  async function startConversation(){
+    const product=products.find(p=>p.id===$("productSelect").value);
+    if(!product){alert("Choose a product first.");return}
+    if(product.seller_id===user.id){alert("You cannot message yourself about your own listing.");return}
+    const button=$("startChat");button.disabled=true;button.textContent="Opening…";
+    try{
+      let r=await client.from("marketplace_conversations").insert({product_id:product.id,buyer_id:user.id,seller_id:product.seller_id}).select("id").single();
+      if(r.error&&r.error.code==="23505"){
+        r=await client.from("marketplace_conversations").select("id").eq("product_id",product.id).eq("buyer_id",user.id).single();
+      }
+      if(r.error)throw r.error;
+      await loadConversations();await openConversation(r.data.id);
+    }catch(e){alert("Could not start this chat: "+e.message)}
+    finally{button.disabled=false;button.textContent="Message seller"}
+  }
+  $("startChat").addEventListener("click",startConversation);
+  $("search").addEventListener("input",renderConversations);
+  list.addEventListener("click",e=>{const b=e.target.closest("[data-id]");if(b)openConversation(b.dataset.id)});
+  $("composer").addEventListener("submit",async e=>{
+    e.preventDefault();const input=$("messageInput"),body=input.value.trim();if(!body||!active)return;
+    const send=$("send");send.disabled=true;
+    try{const r=await client.from("marketplace_messages").insert({conversation_id:active.id,sender_id:user.id,body});if(r.error)throw r.error;input.value="";await loadMessages(active.id);await loadConversations()}
+    catch(err){alert("Message not sent: "+err.message)}
+    finally{send.disabled=false;input.focus()}
+  });
+  $("messageInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("composer").requestSubmit()}});
+  window.addEventListener("beforeunload",()=>{if(poll)clearInterval(poll);if(channel&&client)client.removeChannel(channel)});
+  init().catch(e=>fail(e.message||"Could not load inbox"));
+})();
+</script>
+</body>
+</html>
